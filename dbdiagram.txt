@@ -1,0 +1,79 @@
+Table students {
+  id int [pk]
+  name varchar
+  class_id int
+}
+
+Table classes {
+  id int [pk]
+  name varchar
+  teacher_id int
+}
+
+Table teachers {
+  id int [pk]
+  name varchar
+}
+
+Table experiments {
+  id int [pk]
+  results json
+  class_id int
+  date_created date
+  questionnaire_id int
+  finished bool
+}
+
+
+// JSON contains the questions and their params
+Table questionnaires {
+  id int [pk]
+  content json
+}
+
+Table custom_questionnaires {
+  id int [pk]
+  content json
+  teacher_id int
+}
+
+// Table questions {
+//   id int [pk]
+//   content varchar
+//   min_students int
+//   max_students int
+// }
+
+// Table question_questionnaire {
+//   question_id int [pk]
+//   questionnaire_id int [pk]
+// }
+
+// Pending experiments
+Table experiments_students {
+  experiment_id int [pk]
+  student_id int [pk]
+  completed bool
+}
+
+
+Ref {students.class_id > classes.id}
+Ref {classes.teacher_id > teachers.id}
+Ref {experiments.class_id > classes.id}
+Ref {custom_questionnaires.teacher_id > teachers.id}
+
+// Junction Table question-questionnaire
+// Ref {question_questionnaire.question_id > questions.id}
+// Ref {question_questionnaire.questionnaire_id > questionnaires.id}
+
+// Junction Table experiment-student
+Ref {experiments_students.experiment_id > experiments.id}
+Ref {experiments_students.student_id > students.id}
+
+
+
+
+
+
+
+

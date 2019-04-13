@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher choice</title>
+</head>
+<body>
+
+Teacher log in:
+
+{% for teacher in teachers %}
+
+<div><a href="/teacher/{{ teacher[0] }}">{{ teacher[1] }}</a></div>
+
+{% endfor %}
+
+<br/>
+
+Student log in:
+
+{% for student in students %}
+
+<div><a href="/student/{{ student[0] }}">{{ student[1] }}</a>, class {{ student[2] }}</div>
+
+{% endfor %}
+
+
+</body>
+</html>

@@ -8,6 +8,8 @@ Table classes {
   id int [pk]
   name varchar
   teacher_id int
+  description varchar
+  img blob
 }
 
 Table teachers {
@@ -17,10 +19,11 @@ Table teachers {
 
 Table experiments {
   id int [pk]
+  info json
   results json
   class_id int
   date_created date
-  questionnaire_id int
+  // questionnaire_id int
   finished bool
 }
 
@@ -53,7 +56,7 @@ Table custom_questionnaires {
 Table experiments_students {
   experiment_id int [pk]
   student_id int [pk]
-  completed bool
+  // completed bool
 }
 
 

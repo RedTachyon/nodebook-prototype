@@ -11,31 +11,9 @@ from models import get_classes, get_teachers, get_experiments, create_class, cre
 from models import get_all_students, push_questionnaire, get_pending_experiments, get_experiment_info, update_results
 from models import check_experiment_exists
 
+from utils import query_to_dict
+
 app = Flask(__name__)
-
-# Let's check branching
-
-def query_to_dict(query, name, id_names):
-    """
-    Converts the result of a SQL query to a jsonifiable dictionary.
-
-    {name: [...]}
-
-    :param query: List of tuples (result of SQL select)
-    :param name: Name of the main dict field
-    :param id_names: (id, name) pairs for each index to be taken from the query, and a correpsonding name
-    :return:
-    """
-    res_dict = {name: []}
-
-    for row in query:
-        part_dict = {}
-        for (id_, name_) in id_names:
-            part_dict[name_] = row[id_]
-
-        res_dict[name].append(part_dict)
-
-    return res_dict
 
 
 @app.route('/api/get_classes/<teacher_id>', methods=['GET'])
@@ -82,13 +60,25 @@ def api_students(class_id):
 def api_class_experiments(class_id):
     experiments = get_experiments(class_id)
 
-    experiments_dict = query_to_dict(experiments, 'experiments', [
-        (0, 'id'),
-        (1, 'info'),
-        (2, 'replies'),
-        (4, 'date_created'),
-        (5, 'finished')
-    ])
+    # experiments_dict = query_to_dict(experiments, 'experiments', [
+    #     (0, 'id'),
+    #     (1, 'info'),
+    #     (2, 'replies'),
+    #     (4, 'date_created'),
+    #     (5, 'finished')
+    # ])
+
+    experiments_dict = {'experiments': []}
+    for exp in experiments:
+        experiments_dict['experiments'].append(
+            {
+                'id': exp[0],
+                'info': json.loads(exp[1]),
+                'replies': json.loads(exp[2])['replies'],
+                'date_created': exp[4],
+                'finished': exp[5]
+            }
+        )
 
     return jsonify(experiments_dict)
 
@@ -141,7 +131,7 @@ def api_questionnaire_reply(student_id, experiment_id):
 
     update_results(student_id, experiment_id, idx)
 
-    return 'hi'
+    return 'Response submitted'
 
 
 ########################################################################################################################

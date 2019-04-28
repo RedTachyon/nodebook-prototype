@@ -75,7 +75,7 @@ def push_questionnaire(experiment_id, class_id):
 def get_classes(teacher_id):
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
-    cur.execute("""SELECT * FROM classes
+    cur.execute("""SELECT id, name, teacher_id, description FROM classes
                     WHERE teacher_id = ?""", (teacher_id,))
     classes = cur.fetchall()
     con.close()
@@ -94,7 +94,7 @@ def get_teachers():
 def get_experiments(class_id):
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
-    cur.execute("""SELECT * FROM experiments
+    cur.execute("""SELECT id, info, replies, class_id, date_created, finished FROM experiments
                     WHERE class_id = ?""", (class_id,))
     experiments = cur.fetchall()
     con.close()
@@ -194,3 +194,18 @@ def update_results(student_id, experiment_id, students_chosen):
     con.commit()
 
     con.close()
+
+
+def check_experiment_exists(student_id, experiment_id):
+    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    cur = con.cursor()
+
+    cur.execute("SELECT * FROM experiments_students WHERE student_id = ? AND experiment_id = ?",
+                (student_id, experiment_id))
+
+    response = cur.fetchall()
+
+    if len(response) > 0:
+        return True
+    else:
+        return False

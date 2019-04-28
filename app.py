@@ -1,15 +1,150 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, jsonify, abort
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, BooleanField, SubmitField
+from wtforms.validators import DataRequired
+
 import sqlite3 as sql
 import datetime
 import json
 
 from models import get_classes, get_teachers, get_experiments, create_class, create_questionnaire, get_students_in_class
 from models import get_all_students, push_questionnaire, get_pending_experiments, get_experiment_info, update_results
+from models import check_experiment_exists
 
 app = Flask(__name__)
 
 # Let's check branching
 
+def query_to_dict(query, name, id_names):
+    """
+    Converts the result of a SQL query to a jsonifiable dictionary.
+
+    {name: [...]}
+
+    :param query: List of tuples (result of SQL select)
+    :param name: Name of the main dict field
+    :param id_names: (id, name) pairs for each index to be taken from the query, and a correpsonding name
+    :return:
+    """
+    res_dict = {name: []}
+
+    for row in query:
+        part_dict = {}
+        for (id_, name_) in id_names:
+            part_dict[name_] = row[id_]
+
+        res_dict[name].append(part_dict)
+
+    return res_dict
+
+
+@app.route('/api/get_classes/<teacher_id>', methods=['GET'])
+def api_classes(teacher_id):
+    """
+    {
+    "classes": [
+        {
+          "description": "The most basic class",
+          "id": 1,
+          "name": "1A"
+        },
+        {
+          "description": "The most basic class",
+          "id": 2,
+          "name": "2A"
+        },
+        {
+          "description": "An empty class cuz I'm lazy",
+          "id": 5,
+          "name": "10F"
+        }
+      ]
+    }
+
+    """
+    classes = get_classes(teacher_id)
+
+    classes_dict = query_to_dict(classes, 'classes', [(0, 'id'), (1, 'name'), (3, 'description')])
+
+    return jsonify(classes_dict)
+
+
+@app.route('/api/get_students/<class_id>', methods=['GET'])
+def api_students(class_id):
+    students = get_students_in_class(class_id)
+
+    students_dict = query_to_dict(students, 'students', [(0, 'id'), (1, 'name')])
+
+    return jsonify(students_dict)
+
+
+@app.route('/api/get_experiments/<class_id>')
+def api_class_experiments(class_id):
+    experiments = get_experiments(class_id)
+
+    experiments_dict = query_to_dict(experiments, 'experiments', [
+        (0, 'id'),
+        (1, 'info'),
+        (2, 'replies'),
+        (4, 'date_created'),
+        (5, 'finished')
+    ])
+
+    return jsonify(experiments_dict)
+
+
+################
+# STUDENT PART #
+################
+
+
+@app.route('/api/get_questionnaires/<student_id>', methods=['GET'])
+def api_questionnaires(student_id):
+    experiments = get_pending_experiments(student_id)
+
+    exp_dict = query_to_dict(experiments, 'experiments', [(0, 'id'), (1, 'date')])
+    return jsonify(exp_dict)
+
+
+@app.route('/api/questionnaire/<student_id>/<experiment_id>', methods=['GET'])
+def api_questionnaire_details(student_id, experiment_id):
+    info, students = get_experiment_info(student_id, experiment_id)
+    # info = json.loads(info[0])
+
+    students_dicts = [{'name': s[1], 'id': s[0]} for s in students]
+
+    res_dict = {'info': json.loads(info[0][0]), 'students': students_dicts}
+
+    # print(students)
+    print(json.loads(info[0][0]))
+    return jsonify(res_dict)
+
+
+@app.route('/api/questionnaire_reply/<student_id>/<experiment_id>', methods=['POST'])
+def api_questionnaire_reply(student_id, experiment_id):
+    """
+    Usage: pass selected student id's as the keys of the query (?), with the value 'true'
+    .../api/questionnaire_reply/X/Y?1=true&5=true&10=true
+    """
+
+    if not check_experiment_exists(student_id, experiment_id):
+        abort(400, description='Experiment does not exist')
+
+    args = [arg for arg in request.args.lists()]
+
+    idx = []
+    for id_, value in args:
+        if value[0] == 'true':
+            idx.append(id_)
+
+    print(idx)
+
+    update_results(student_id, experiment_id, idx)
+
+    return 'hi'
+
+
+########################################################################################################################
 
 @app.route('/', methods=['GET'])
 def home():

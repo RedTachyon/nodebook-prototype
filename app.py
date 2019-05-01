@@ -9,12 +9,17 @@ import json
 
 from models import get_classes, get_teachers, get_experiments, create_class, create_questionnaire, get_students_in_class
 from models import get_all_students, push_questionnaire, get_pending_experiments, get_experiment_info, update_results
-from models import check_experiment_exists
+from models import check_experiment_exists, initialize
 
 from utils import query_to_dict
 
 app = Flask(__name__)
 
+
+@app.route('/api/reset', methods=['GET'])
+def reset_data():
+    initialize()
+    return "Database has been reset"
 
 @app.route('/api/get_classes/<teacher_id>', methods=['GET'])
 def api_classes(teacher_id):

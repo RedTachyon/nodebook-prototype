@@ -6,6 +6,22 @@ import json
 ROOT = path.dirname(path.relpath(__file__))
 
 
+def initialize():
+    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    cur = con.cursor()
+
+    with open('schema.sql') as f:
+        script = f.read()
+        cur.executescript(script)
+
+    with open('seed.sql') as f:
+        script = f.read()
+        cur.executescript(script)
+
+    # con.commit()
+    con.close()
+
+
 def create_teacher(name):
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
@@ -20,6 +36,26 @@ def create_class(name, teacher_id, description):
     cur.execute("INSERT INTO classes (name, teacher_id, description) VALUES (?, ?, ?)", (name, teacher_id, description))
     con.commit()
     con.close()
+
+
+def get_students_in_class(class_id):
+    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    cur = con.cursor()
+    cur.execute("""SELECT s.id, s.name FROM students s
+                    LEFT OUTER JOIN classes_students cs ON s.id = cs.student_id
+                    WHERE cs.class_id = ?""", (class_id,))
+    students = cur.fetchall()
+    con.close()
+    return students
+
+
+def get_all_students():
+    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    cur = con.cursor()
+    cur.execute("""SELECT students.id, students.name FROM students""")
+    students = cur.fetchall()
+    con.close()
+    return students
 
 
 def generate_result_json(questions, mins, maxs):
@@ -99,30 +135,6 @@ def get_experiments(class_id):
     experiments = cur.fetchall()
     con.close()
     return experiments
-
-
-def get_students_in_class(class_id):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
-    cur = con.cursor()
-    cur.execute("""SELECT students.id, students.name, students.class_id FROM students
-                    WHERE class_id = ?""", (class_id,))
-    students = cur.fetchall()
-    con.close()
-    return students
-
-
-def get_all_students():
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
-    cur = con.cursor()
-    cur.execute("""SELECT students.id, students.name, classes.name 
-                    FROM students
-                    LEFT OUTER JOIN classes
-                    ON classes.id=students.class_id
-                    ORDER BY classes.id
-                    """)
-    students = cur.fetchall()
-    con.close()
-    return students
 
 
 def get_pending_experiments(student_id):

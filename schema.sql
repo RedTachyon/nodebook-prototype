@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `experiments`
   `replies` json,
   `class_id` INTEGER,
   `date_created` date,
---   `questionnaire_id` int,
+--   `type` TEXT,
   `finished` bool,
   FOREIGN KEY (class_id) REFERENCES classes(id)
 );

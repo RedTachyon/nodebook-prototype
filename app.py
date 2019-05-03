@@ -15,13 +15,30 @@ from utils import query_to_dict
 
 app = Flask(__name__)
 
+# TODO: Do the rest of the APIs - I think only the saved questionnaires?
+# TODO: Add images
+
 
 @app.route('/api/reset', methods=['GET'])
 def reset_data():
     initialize()
+
+    # Create an experiment for class_id=1
+    experiment_id = create_questionnaire(
+        ["Socio1", "Scalar2", "Socio3"],
+        [0, 1, 1], [3, 3, 1], 1,
+        ["sociometric", "scalar", "sociometric"]
+    )
+    push_questionnaire(experiment_id, 1)
+
+    # Create a response
+    update_results(1, experiment_id, [[], 2, [6]])
+    update_results(2, experiment_id, [[1, 6, 7], 3, [1]])
+
     return "Database has been reset"
 
-@app.route('/api/get_classes/<teacher_id>', methods=['GET'])
+
+@app.route('/api/teacher/get_classes/<teacher_id>', methods=['GET'])
 def api_classes(teacher_id):
     """
     {
@@ -52,7 +69,7 @@ def api_classes(teacher_id):
     return jsonify(classes_dict)
 
 
-@app.route('/api/get_students/<class_id>', methods=['GET'])
+@app.route('/api/teacher/get_students/<class_id>', methods=['GET'])
 def api_students(class_id):
     students = get_students_in_class(class_id)
 
@@ -61,19 +78,12 @@ def api_students(class_id):
     return jsonify(students_dict)
 
 
-@app.route('/api/get_experiments/<class_id>')
+@app.route('/api/teacher/get_experiments/<class_id>', methods=['GET'])
 def api_class_experiments(class_id):
     experiments = get_experiments(class_id)
 
-    # experiments_dict = query_to_dict(experiments, 'experiments', [
-    #     (0, 'id'),
-    #     (1, 'info'),
-    #     (2, 'replies'),
-    #     (4, 'date_created'),
-    #     (5, 'finished')
-    # ])
-
     experiments_dict = {'experiments': []}
+
     for exp in experiments:
         experiments_dict['experiments'].append(
             {
@@ -81,11 +91,36 @@ def api_class_experiments(class_id):
                 'info': json.loads(exp[1]),
                 'replies': json.loads(exp[2])['replies'],
                 'date_created': exp[4],
-                'finished': exp[5]
+                'finished': exp[5],
             }
         )
 
     return jsonify(experiments_dict)
+
+
+@app.route('/api/teacher/create_experiment/<class_id>', methods=['POST'])
+def api_create_experiment(class_id):
+    """
+    JSON format:
+    {"questions": ["Text1", "Text2", "Text3"],
+     "mins": [0, 1, 1],
+     "maxs": [5, 1, 3],
+     "types": ["sociometric", "sociometric", "scale"]
+
+    """
+    info = request.json
+
+    if not ('questions' in info and 'mins' in info and 'maxs' in info and 'type' in info):
+        return "Malformed input", 400
+
+    if info['type'] not in ('sociometric', 'scale'):
+        return "Wrong type", 400
+
+    experiment_id = create_questionnaire(info['questions'], info['mins'], info['maxs'], class_id, info['types'])
+
+    push_questionnaire(experiment_id, class_id)
+
+    return jsonify(info)
 
 
 ################
@@ -93,7 +128,7 @@ def api_class_experiments(class_id):
 ################
 
 
-@app.route('/api/get_questionnaires/<student_id>', methods=['GET'])
+@app.route('/api/student/get_questionnaires/<student_id>', methods=['GET'])
 def api_questionnaires(student_id):
     experiments = get_pending_experiments(student_id)
 
@@ -101,45 +136,56 @@ def api_questionnaires(student_id):
     return jsonify(exp_dict)
 
 
-@app.route('/api/questionnaire/<student_id>/<experiment_id>', methods=['GET'])
+@app.route('/api/student/questionnaire_info/<student_id>/<experiment_id>', methods=['GET'])
 def api_questionnaire_details(student_id, experiment_id):
     info, students = get_experiment_info(student_id, experiment_id)
-    # info = json.loads(info[0])
 
     students_dicts = [{'name': s[1], 'id': s[0]} for s in students]
 
-    res_dict = {'info': json.loads(info[0][0]), 'students': students_dicts}
+    res_dict = {'info': json.loads(info), 'students': students_dicts}
 
     # print(students)
-    print(json.loads(info[0][0]))
+    # print(json.loads(info))
     return jsonify(res_dict)
 
 
-@app.route('/api/questionnaire_reply/<student_id>/<experiment_id>', methods=['POST'])
+@app.route('/api/student/questionnaire_reply/<student_id>/<experiment_id>', methods=['POST'])
 def api_questionnaire_reply(student_id, experiment_id):
     """
-    Usage: pass selected student id's as the keys of the query (?), with the value 'true'
-    .../api/questionnaire_reply/X/Y?1=true&5=true&10=true
+    student_response should be like
+    [ [3, 5], 2, [7], [] ]
+    If questions 0, 2, 3 were sociometric and question 1 was scale
+
+    aka the input json has format
+    {"responses":
+      [
+        [3, 5],
+        2,
+        [7],
+        []
+      ]
+    }
+
     """
 
     if not check_experiment_exists(student_id, experiment_id):
         abort(400, description='Experiment does not exist')
 
-    args = [arg for arg in request.args.lists()]
+    info = request.json
 
-    idx = []
-    for id_, value in args:
-        if value[0] == 'true':
-            idx.append(id_)
+    student_response = info["responses"]
 
-    print(idx)
+    update_results(student_id, experiment_id, student_response)
 
-    update_results(student_id, experiment_id, idx)
-
-    return 'Response submitted'
+    return 'Response submitted', 201
 
 
 ########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+
 
 @app.route('/', methods=['GET'])
 def home():

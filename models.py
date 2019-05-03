@@ -58,15 +58,16 @@ def get_all_students():
     return students
 
 
-def generate_result_json(questions, mins, maxs):
+def generate_result_json(questions, mins, maxs, types):
 
     output = {'questions': []}
 
-    for i, (question, min_ans, max_ans) in enumerate(zip(questions, mins, maxs)):
+    for i, (question, min_ans, max_ans, type_) in enumerate(zip(questions, mins, maxs, types)):
         question_info = {'text': question,
                          'min': min_ans,
                          'max': max_ans,
-                         'question_no': i}
+                         'question_no': i,
+                         'type': type_}
 
         output['questions'].append(question_info)
 
@@ -74,15 +75,20 @@ def generate_result_json(questions, mins, maxs):
     return json_string
 
 
-def create_questionnaire(questions, mins, maxs, class_id):
+def create_questionnaire(questions, mins, maxs, class_id, types):
+
+    # if type_ not in ('sociometric', 'scale'):
+    #     return -1
+
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
 
     timestamp = time.time()
-    results = generate_result_json(questions, mins, maxs)
+    results = generate_result_json(questions, mins, maxs, types)
 
     # Create experiment entry
-    cur.execute("INSERT INTO experiments (info, replies, class_id, date_created, finished) VALUES (?, ?, ?, ?, ?)",
+    cur.execute("INSERT INTO experiments (info, replies, class_id, date_created, finished) "
+                "VALUES (?, ?, ?, ?, ?)",
                 (results, '{"replies": []}', class_id, timestamp, 0))
 
     experiment_id = cur.lastrowid
@@ -95,12 +101,12 @@ def create_questionnaire(questions, mins, maxs, class_id):
 
 def push_questionnaire(experiment_id, class_id):
 
-    students = get_students_in_class(class_id)  # id, name, class
+    students = get_students_in_class(class_id)  # id, name
 
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
 
-    for (student_id, _, _) in students:
+    for (student_id, _) in students:
         cur.execute("INSERT INTO experiments_students (experiment_id, student_id) VALUES (?, ?)",
                     (experiment_id, student_id))
 
@@ -158,16 +164,18 @@ def get_experiment_info(student_id, experiment_id):
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
 
-    cur.execute("""SELECT info FROM experiments
+    cur.execute("""SELECT info, class_id FROM experiments
                     WHERE id = ?
-                    """, experiment_id)
+                    """, (experiment_id,))
 
-    info = cur.fetchall()
+    info, class_id = cur.fetchall()[0]
+    print(info)
 
-    cur.execute("""SELECT id, name FROM students
-                    WHERE id != ? AND class_id IN 
-                        (SELECT class_id FROM students WHERE id = ?)
-                    """, (student_id, student_id))
+    # Get all other students in class
+    cur.execute("""SELECT s.id, s.name FROM students s
+                    LEFT OUTER JOIN classes_students cs on s.id = cs.student_id
+                    WHERE cs.class_id = ? and s.id != ?
+                    """, (class_id, student_id))
 
     students = cur.fetchall()
     con.close()
@@ -178,7 +186,7 @@ def get_experiment_replies(experiment_id):
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
 
-    cur.execute("SELECT replies FROM experiments WHERE id=?", (experiment_id,))
+    cur.execute("SELECT replies FROM experiments WHERE id = ?", (experiment_id,))
     replies = cur.fetchall()
 
     con.close()
@@ -186,12 +194,18 @@ def get_experiment_replies(experiment_id):
     return replies[0][0]
 
 
-def update_results(student_id, experiment_id, students_chosen):
+def update_results(student_id, experiment_id, student_response):
+    """
+    student_response should be like
+    [ [3, 5], 2, [7], [] ]
+    If questions 0, 2, 3 were sociometric and question 1 was scale
+
+    """
 
     replies = get_experiment_replies(experiment_id)
     replies_dict = json.loads(replies)
 
-    replies_dict['replies'].append({student_id: students_chosen})
+    replies_dict['replies'].append({"id": student_id, "response": student_response})
 
     new_replies = json.dumps(replies_dict)
 

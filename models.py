@@ -231,7 +231,33 @@ def check_experiment_exists(student_id, experiment_id):
 
     response = cur.fetchall()
 
+    con.close()
+
     if len(response) > 0:
         return True
     else:
         return False
+
+
+def save_template(teacher_id, content):
+    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    cur = con.cursor()
+
+    cur.execute("INSERT INTO custom_questionnaires (content, teacher_id) VALUES (?, ?)", (content, teacher_id))
+
+    con.commit()
+    con.close()
+
+
+def load_templates(teacher_id):
+    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    cur = con.cursor()
+
+    cur.execute("SELECT content FROM custom_questionnaires WHERE teacher_id = ?", (teacher_id,))
+
+    templates = cur.fetchall()
+
+    con.commit()
+    con.close()
+
+    return templates

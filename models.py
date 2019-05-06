@@ -170,7 +170,7 @@ def get_experiment_details(experiment_id):
     return info
 
 
-def get_experiment_replies(experiment_id):
+def get_teacher_experiment_replies(experiment_id):
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
 
@@ -184,7 +184,7 @@ def get_experiment_replies(experiment_id):
 def get_pending_experiments(student_id):
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
-    cur.execute("""SELECT e.id, e.date_created
+    cur.execute("""SELECT e.id, e.date_created, e.class_id
                     FROM experiments e
                     LEFT OUTER JOIN experiments_students es 
                     ON e.id = es.experiment_id

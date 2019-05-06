@@ -112,7 +112,7 @@ def api_experiment_details(experiment_id):
 
 @app.route('/api/teacher/experiment_replies/<experiment_id>', methods=['GET'])
 def api_experiment_replies(experiment_id):
-    replies = models.get_experiment_replies(experiment_id)
+    replies = models.get_teacher_experiment_replies(experiment_id)
 
     replies_dict = json.loads(replies)
 

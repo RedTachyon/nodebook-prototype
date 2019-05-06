@@ -189,7 +189,7 @@ def api_create_category(teacher_id):
 
     id_ = models.new_category(teacher_id, name)
 
-    return id_
+    return str(id_), 201
 
 
 @app.route('/api/teacher/list_categories/<teacher_id>', methods=['GET'])

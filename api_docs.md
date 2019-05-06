@@ -50,7 +50,7 @@ Returns a list of classes belonging to the selected teacher
 
 <br></br>
 
-**/api/get_students/<class_id>**
+**/api/teacher/get_students/<class_id>**
 
 GET
 

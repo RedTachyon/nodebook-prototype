@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, jsonify, abort
-from flask_cors import CORS
+# from flask_cors import CORS
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired
@@ -11,13 +11,13 @@ import models
 from utils import query_to_dict
 
 app = Flask(__name__)
-CORS(app)
+# CORS(app)
 
 # TODO: Add images
 
 
 @app.route('/api', methods=['GET'])
-def home():
+def api_home():
     return "This is a barebones  API home screen."
 
 

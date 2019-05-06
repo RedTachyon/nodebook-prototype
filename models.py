@@ -34,8 +34,13 @@ def create_class(name, teacher_id, description):
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
     cur.execute("INSERT INTO classes (name, teacher_id, description) VALUES (?, ?, ?)", (name, teacher_id, description))
+
+    class_id = cur.lastrowid
+
     con.commit()
     con.close()
+
+    return class_id
 
 
 def get_students_in_class(class_id):

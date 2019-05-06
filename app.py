@@ -11,7 +11,6 @@ from utils import query_to_dict
 
 app = Flask(__name__)
 
-# TODO: Do the rest of the APIs - I think only the saved questionnaires?
 # TODO: Add images
 
 
@@ -31,7 +30,19 @@ def reset_data():
     models.update_results(1, experiment_id, [[], 2, [6]])
     models.update_results(2, experiment_id, [[1, 6, 7], 3, [1]])
 
-    return "Database has been reset"
+    return "Database has been reset", 201
+
+
+@app.route('/api/teacher/create_class/<teacher_id>', methods=['POST'])
+def api_create_class(teacher_id):
+    """
+     JSON format:
+     {"name": ..., "description": ...}
+    """
+    info = request.json
+
+    class_id = models.create_class(info['name'], teacher_id, info['description'])
+    return class_id
 
 
 @app.route('/api/teacher/get_classes/<teacher_id>', methods=['GET'])
@@ -109,8 +120,8 @@ def api_create_experiment(class_id):
     if not ('questions' in info and 'mins' in info and 'maxs' in info and 'type' in info):
         return "Malformed input", 400
 
-    if info['type'] not in ('sociometric', 'scale'):
-        return "Wrong type", 400
+    # if info['type'] not in ('sociometric', 'scale'):
+    #     return "Wrong type", 400
 
     experiment_id = models.create_questionnaire(info['questions'], info['mins'], info['maxs'], class_id, info['types'])
 
@@ -120,14 +131,14 @@ def api_create_experiment(class_id):
 
 
 @app.route('/api/teacher/save_template/<teacher_id>', methods=['POST'])
-def save_template(teacher_id):
+def api_save_template(teacher_id):
     content = json.dumps(request.json)
     models.save_template(teacher_id, content)
     return content, 201
 
 
 @app.route('/api/teacher/load_template/<teacher_id>', methods=['GET'])
-def load_templates(teacher_id):
+def api_load_templates(teacher_id):
     templates = models.load_templates(teacher_id)
     # print(templates[0])
     templates = map(lambda x: x[0], templates)

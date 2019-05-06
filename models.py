@@ -10,11 +10,11 @@ def initialize():
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
 
-    with open('schema.sql') as f:
+    with open(path.join(ROOT, 'schema.sql')) as f:
         script = f.read()
         cur.executescript(script)
 
-    with open('seed.sql') as f:
+    with open(path.join(ROOT, 'seed.sql')) as f:
         script = f.read()
         cur.executescript(script)
 

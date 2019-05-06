@@ -92,6 +92,33 @@ def api_students(class_id):
     return jsonify(students_dict)
 
 
+@app.route('/api/teacher/list_experiments/<class_id>', methods=['GET'])
+def api_list_experiments(class_id):
+    experiments = models.list_experiments(class_id)
+    # print(experiments)
+    experiments_dict = query_to_dict(experiments, "experiments", [(0, 'id'), (1, 'date_created')])
+
+    return jsonify(experiments_dict)
+
+
+@app.route('/api/teacher/experiment_details/<experiment_id>', methods=['GET'])
+def api_experiment_details(experiment_id):
+    info = models.get_experiment_details(experiment_id)
+
+    info_dict = json.loads(info)
+
+    return jsonify(info_dict)
+
+
+@app.route('/api/teacher/experiment_replies/<experiment_id>', methods=['GET'])
+def api_experiment_replies(experiment_id):
+    replies = models.get_experiment_replies(experiment_id)
+
+    replies_dict = json.loads(replies)
+
+    return jsonify(replies_dict)
+
+
 @app.route('/api/teacher/get_experiments/<class_id>', methods=['GET'])
 def api_class_experiments(class_id):
     experiments = models.get_experiments(class_id)

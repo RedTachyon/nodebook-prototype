@@ -148,6 +148,39 @@ def get_experiments(class_id):
     return experiments
 
 
+def list_experiments(class_id):
+    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    cur = con.cursor()
+
+    cur.execute("SELECT id, date_created FROM experiments WHERE class_id=?", (class_id,))
+
+    experiments = cur.fetchall()
+    con.close()
+    return experiments
+
+
+def get_experiment_details(experiment_id):
+    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    cur = con.cursor()
+
+    cur.execute("SELECT info FROM experiments WHERE id = ?", (experiment_id,))
+
+    info = cur.fetchall()[0][0]
+    con.close()
+    return info
+
+
+def get_experiment_replies(experiment_id):
+    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    cur = con.cursor()
+
+    cur.execute("SELECT replies FROM experiments WHERE id = ?", (experiment_id,))
+
+    replies = cur.fetchall()[0][0]
+    con.close()
+    return replies
+
+
 def get_pending_experiments(student_id):
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()

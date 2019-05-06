@@ -137,6 +137,18 @@ Returns a list of all experiments pushed to the chosen class
 }
 ```
 
+The API endpoint above has been split into three parts: 
+
+**/api/teacher/list_experiments/<class_id>**
+
+**/api/teacher/experiment_details/<experiment_id>**
+
+**/api/teacher/experiment_replies**
+
+They all do more or less what you expect them to do - the first one sends a list of (id, date) info for each experiment,
+the second one gives you questions and info like that, and the third one gives you replies given by the students.
+Figuring out the exact format shall be left as an exercise for the reader.
+
 <br></br>
 
 **/api/teacher/create_experiment/<class_id>/<student_id>**

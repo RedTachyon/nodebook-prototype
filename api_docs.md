@@ -171,6 +171,13 @@ Each array needs to be of the same length, with the i-th question described by t
 
 <br></br>
 
+**/api/teacher/create_class/<teacher_id>**
+
+POST
+
+Creates a new class assigned to the teacher, expects a JSON with "name" and "description" fields
+
+
 ### Template management
 
 **/api/teacher/save_template/<category_id>**

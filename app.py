@@ -14,6 +14,11 @@ app = Flask(__name__)
 # TODO: Add images
 
 
+@app.route('/api', methods=['GET'])
+def home():
+    return "This is a barebones  API home screen."
+
+
 @app.route('/api/reset', methods=['GET'])
 def reset_data():
     models.initialize()

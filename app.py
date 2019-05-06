@@ -198,7 +198,7 @@ def api_list_categories(teacher_id):
 
     cat_dict = query_to_dict(categories, "categories", [(0, "id"), (1, "name")])
 
-    return cat_dict
+    return jsonify(cat_dict)
 
 
 # @app.route('/api/teacher/get_templates/<category_id>', methods=['GET'])

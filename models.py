@@ -277,21 +277,21 @@ def check_experiment_exists(student_id, experiment_id):
         return False
 
 
-def save_template(teacher_id, content):
+def save_template(category_id, content):
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
 
-    cur.execute("INSERT INTO custom_questionnaires (content, teacher_id) VALUES (?, ?)", (content, teacher_id))
+    cur.execute("INSERT INTO custom_questionnaires (content, category_id) VALUES (?, ?)", (content, category_id))
 
     con.commit()
     con.close()
 
 
-def load_templates(teacher_id):
+def load_templates(category_id):
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
 
-    cur.execute("SELECT content FROM custom_questionnaires WHERE teacher_id = ?", (teacher_id,))
+    cur.execute("SELECT id, content FROM custom_questionnaires WHERE category_id = ?", (category_id,))
 
     templates = cur.fetchall()
 
@@ -299,3 +299,30 @@ def load_templates(teacher_id):
     con.close()
 
     return templates
+
+
+def new_category(teacher_id, name):
+    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    cur = con.cursor()
+
+    cur.execute("INSERT INTO template_categories (name, teacher_id) VALUES (?, ?)", (name, teacher_id))
+    id_ = cur.lastrowid
+
+    con.commit()
+    con.close()
+
+    return id_
+
+
+def all_categories(teacher_id):
+    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    cur = con.cursor()
+
+    cur.execute("SELECT id, name FROM template_categories WHERE teacher_id = ?", (teacher_id,))
+
+    categories = cur.fetchall()
+
+    con.commit()
+    con.close()
+
+    return categories

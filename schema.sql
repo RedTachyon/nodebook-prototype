@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS teachers;
 DROP TABLE IF EXISTS questionnaires;
 DROP TABLE IF EXISTS custom_questionnaires;
 DROP TABLE IF EXISTS experiments_students;
+DROP TABLE IF EXISTS template_categories;
 
 CREATE TABLE IF NOT EXISTS `students`
 (

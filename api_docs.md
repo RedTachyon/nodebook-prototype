@@ -169,6 +169,33 @@ The information about the experiment should be contained in a JSON in the body o
 
 Each array needs to be of the same length, with the i-th question described by the i-th position of each array
 
+<br></br>
+
+### Template management
+
+**/api/teacher/save_template/<category_id>**
+
+POST
+
+Saves the json in the request to the chosen category
+
+**/api/teacher/load_templates/<category_id>**
+
+GET
+
+Loads all the templates saved under the chosen category
+
+**/api/teacher/new_category/<teacher_id>**
+
+POST
+
+Saves a new category to the chosen teacher, needs a JSON with "name" field
+
+**/api/teacher/list_categories/<teacher_id>**
+
+GET
+
+Lists all categories that the teacher has created
 
 ## Student API
 

@@ -164,21 +164,52 @@ def api_create_experiment(class_id):
     return jsonify(info)
 
 
-@app.route('/api/teacher/save_template/<teacher_id>', methods=['POST'])
-def api_save_template(teacher_id):
+@app.route('/api/teacher/save_template/<category_id>', methods=['POST'])
+def api_save_template(category_id):
     content = json.dumps(request.json)
-    models.save_template(teacher_id, content)
+    models.save_template(category_id, content)
     return content, 201
 
 
-@app.route('/api/teacher/load_template/<teacher_id>', methods=['GET'])
-def api_load_templates(teacher_id):
-    templates = models.load_templates(teacher_id)
+@app.route('/api/teacher/load_templates/<category_id>', methods=['GET'])
+def api_load_templates(category_id):
+    templates = models.load_templates(category_id)
     # print(templates[0])
     templates = map(lambda x: x[0], templates)
     templates = list(map(json.loads, templates))
     response = {"templates": templates}
     return jsonify(response)
+
+
+@app.route('/api/teacher/new_category/<teacher_id>', methods=['POST'])
+def api_create_category(teacher_id):
+    info = request.json
+
+    name = info['name']
+
+    id_ = models.new_category(teacher_id, name)
+
+    return id_
+
+
+@app.route('/api/teacher/list_categories/<teacher_id>', methods=['GET'])
+def api_list_categories(teacher_id):
+    categories = models.all_categories(teacher_id)
+
+    cat_dict = query_to_dict(categories, "categories", [(0, "id"), (1, "name")])
+
+    return cat_dict
+
+
+# @app.route('/api/teacher/get_templates/<category_id>', methods=['GET'])
+# def api_get_templates(category_id):
+#     templates = models.load_templates(category_id)
+#
+#     templates_dict = query_to_dict(templates, "templates", [(0, "id"), (1, "content")])
+#
+#     return jsonify(templates_dict)
+
+
 
 ################
 # STUDENT PART #

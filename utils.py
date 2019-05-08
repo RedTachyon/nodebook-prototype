@@ -19,3 +19,4 @@ def query_to_dict(query, name, id_names):
         res_dict[name].append(part_dict)
 
     return res_dict
+

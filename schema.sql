@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS students;
 DROP TABLE IF EXISTS classes;
 DROP TABLE IF EXISTS classes_students;
@@ -7,19 +8,41 @@ DROP TABLE IF EXISTS questionnaires;
 DROP TABLE IF EXISTS custom_questionnaires;
 DROP TABLE IF EXISTS experiments_students;
 DROP TABLE IF EXISTS template_categories;
+DROP TABLE IF EXISTS blacklist;
+
+
+CREATE TABLE IF NOT EXISTS `users`
+(
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT ,
+    `email` TEXT,
+    `password` TEXT,
+    `student_id` INTEGER,
+    `teacher_id` INTEGER,
+    FOREIGN KEY (student_id) REFERENCES students(id),
+    FOREIGN KEY (teacher_id) REFERENCES teachers(id)
+);
+
+CREATE TABLE IF NOT EXISTS `blacklist`
+(
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT ,
+    `token` TEXT,
+    `blacklisted_on` date
+);
 
 CREATE TABLE IF NOT EXISTS `students`
 (
     `id`   INTEGER PRIMARY KEY AUTOINCREMENT,
     `name` TEXT
---   `class_id` INTEGER,
---   FOREIGN KEY (class_id) REFERENCES classes(id)
+--     `user_id` INTEGER,
+--     FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 CREATE TABLE IF NOT EXISTS `teachers`
 (
     `id`   INTEGER PRIMARY KEY AUTOINCREMENT,
     `name` TEXT
+--     `user_id` INTEGER,
+--     FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 
@@ -49,7 +72,6 @@ CREATE TABLE IF NOT EXISTS `experiments`
     `replies`      json,
     `class_id`     INTEGER,
     `date_created` date,
---   `type` TEXT,
     `finished`     bool,
     FOREIGN KEY (class_id) REFERENCES classes (id)
 );
@@ -70,6 +92,14 @@ CREATE TABLE IF NOT EXISTS `questionnaires`
     `content` json
 );
 
+CREATE TABLE IF NOT EXISTS `template_categories`
+(
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+    `name` TEXT,
+    `teacher_id` INTEGER,
+    FOREIGN KEY (teacher_id) REFERENCES teachers (id)
+);
+
 CREATE TABLE IF NOT EXISTS `custom_questionnaires`
 (
     `id`         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -80,11 +110,3 @@ CREATE TABLE IF NOT EXISTS `custom_questionnaires`
 --     FOREIGN KEY (teacher_id) REFERENCES teachers (id)
 );
 
-CREATE TABLE IF NOT EXISTS `template_categories`
-(
-    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
-    `name` TEXT,
-    `teacher_id` INTEGER,
-    FOREIGN KEY (teacher_id) REFERENCES teachers (id)
-
-)

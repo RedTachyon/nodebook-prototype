@@ -326,3 +326,46 @@ def all_categories(teacher_id):
     con.close()
 
     return categories
+
+
+def create_user(email, password_hash, name, role):
+    if role not in ('teacher', 'student'):
+        return -1
+
+    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    cur = con.cursor()
+
+    if role == "teacher":
+        cur.execute("INSERT INTO teachers (name) VALUES (?)", (name,))
+        teacher_id = cur.lastrowid
+        student_id = None
+
+    elif role == "student":
+        cur.execute("INSERT INTO students (name) VALUES (?)", (name,))
+        student_id = cur.lastrowid
+        teacher_id = None
+
+    else:
+        student_id = teacher_id = None
+
+    cur.execute("INSERT INTO users (email, password, student_id, teacher_id) VALUES (?, ?, ?, ?)",
+                (email, password_hash, student_id, teacher_id))
+
+    id_ = cur.lastrowid
+
+    con.commit()
+    con.close()
+
+    return id_
+
+
+def get_user_info(email):
+    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    cur = con.cursor()
+
+    cur.execute("SELECT id, password FROM users WHERE email = ?", (email,))
+    pwd = cur.fetchall()
+
+    con.close()
+
+    return pwd

@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS classes_students;
 DROP TABLE IF EXISTS experiments;
 DROP TABLE IF EXISTS teachers;
 DROP TABLE IF EXISTS questionnaires;
-DROP TABLE IF EXISTS custom_questionnaires;
+DROP TABLE IF EXISTS templates;
 DROP TABLE IF EXISTS experiments_students;
 DROP TABLE IF EXISTS template_categories;
 DROP TABLE IF EXISTS blacklist;
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS `template_categories`
     FOREIGN KEY (teacher_id) REFERENCES teachers (id)
 );
 
-CREATE TABLE IF NOT EXISTS `custom_questionnaires`
+CREATE TABLE IF NOT EXISTS templates
 (
     `id`         INTEGER PRIMARY KEY AUTOINCREMENT,
     `content`    json,

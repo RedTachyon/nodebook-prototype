@@ -154,8 +154,12 @@ def api_save_template(category_id):
 def api_load_templates(category_id):
     templates = models.load_templates(category_id)
     # print(templates[0])
-    templates = map(lambda x: x[0], templates)
+    templates = list(map(lambda x: x[1], templates))
+    # print(list(templates))
+
     templates = list(map(json.loads, templates))
+    # print(templates)
+    # print(len(templates))
     response = {"templates": templates}
     return jsonify(response)
 
@@ -304,15 +308,43 @@ def login_user():
 
 @app.route('/auth/test', methods=['GET'])
 def test_token():
-    # TODO: add error handling, try to make it into some decorator, boom
-    print(request.headers.get('Authorization'))
+    # print(request.headers.get('Authorization'))
+    auth_token = request.headers.get('Authorization')
 
-    token = request.headers.get('Authorization').split(" ")[1]
+    if auth_token is None:
+        response = {
+            "status": "Failure",
+            "message": "Need an Authorization header with the format: Bearer <token>"
+        }
+        return jsonify(response), 400
 
-    print(token)
-    print(auth.decode_auth_token(token))
+    try:
+        token = auth_token.split(" ")[1]
+    except IndexError:
+        response = {
+            "status": "Failure",
+            "message": "Malformed auth token. Use the format: Bearer <token>"
+        }
+        return jsonify(response), 400
 
-    return "Sup"
+    user_id = auth.decode_auth_token(token)
+    if isinstance(user_id, str):
+        response = {
+            "status": "Failure",
+            "message": "Wrong token"
+        }
+        return jsonify(response), 400
+
+    response = {
+        "status": "Success",
+        "message": "Logged in",
+        "user_id": user_id
+    }
+
+    return jsonify(response)
+
+# def check_token(allowed_user):
+#
 
 ########################################################################################################################
 ########################################################################################################################

@@ -281,7 +281,7 @@ def save_template(category_id, content):
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
 
-    cur.execute("INSERT INTO custom_questionnaires (content, category_id) VALUES (?, ?)", (content, category_id))
+    cur.execute("INSERT INTO templates (content, category_id) VALUES (?, ?)", (content, category_id))
 
     con.commit()
     con.close()
@@ -291,7 +291,7 @@ def load_templates(category_id):
     con = sql.connect(path.join(ROOT, 'nodedata.db'))
     cur = con.cursor()
 
-    cur.execute("SELECT id, content FROM custom_questionnaires WHERE category_id = ?", (category_id,))
+    cur.execute("SELECT id, content FROM templates WHERE category_id = ?", (category_id,))
 
     templates = cur.fetchall()
 

@@ -2,10 +2,12 @@ from os import path
 import jwt
 import datetime
 import sqlite3 as sql
+from flask import request
 
 import config
 
 ROOT = path.dirname(path.relpath(__file__))
+DB_PATH = path.join(ROOT, 'nodedata.db')
 
 
 def encode_auth_token(user_id):
@@ -24,7 +26,7 @@ def encode_auth_token(user_id):
         return e
 
 
-def check_blacklist(auth_token, db_path=path.join(ROOT, 'nodedata.db')):
+def check_blacklist(auth_token, db_path=DB_PATH):
     con = sql.connect(db_path)
     cur = con.cursor()
 
@@ -50,7 +52,7 @@ def decode_auth_token(auth_token):
         return 'Invalid token. Please log in again.'
 
 
-def check_email_exists(email, db_path=path.join(ROOT, 'nodedata.db')):
+def check_email_exists(email, db_path=DB_PATH):
     con = sql.connect(db_path)
     cur = con.cursor()
 
@@ -61,3 +63,59 @@ def check_email_exists(email, db_path=path.join(ROOT, 'nodedata.db')):
 
     return True if len(result) > 0 else False
 
+
+def recognize_user_logged_in():
+    auth_token = request.headers.get('Authorization')
+
+    if auth_token is None:
+        response = {
+            "status": "Failure",
+            "message": "Need an Authorization header with the format: Bearer <token>",
+            "role": None,
+            "id": None,
+            "user_id": None
+        }
+        return response
+
+    try:
+        token = auth_token.split(" ")[1]
+    except IndexError:
+        response = {
+            "status": "Failure",
+            "message": "Malformed auth token. Use the format: Bearer <token>",
+            "role": None,
+            "id": None,
+            "user_id": None
+        }
+        return response
+
+    user_id = decode_auth_token(token)
+    if isinstance(user_id, str):
+        response = {
+            "status": "Failure",
+            "message": "Wrong token",
+            "role": None,
+            "id": None,
+            "user_id": None
+        }
+        return response
+
+    response = {
+        "status": "Success",
+        "message": "Logged in",
+        "user_id": user_id,
+    }
+
+    con = sql.connect(DB_PATH)
+    cur = con.cursor()
+
+    cur.execute("SELECT student_id, teacher_id FROM users WHERE id = ?", (user_id,))
+    ids = cur.fetchall()
+
+    if len(ids) == 0:
+        response = {
+            "status": "Failure",
+            "message": "No such user in the database",
+        }
+
+    return response

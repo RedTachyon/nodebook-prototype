@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, jsonify, abort
+from flask import Flask, render_template, request, jsonify, abort
 from flask_cors import CORS
 
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -16,9 +16,9 @@ CORS(app)
 # TODO: Add images
 
 
-@app.route('/api', methods=['GET'])
+@app.route('/api/', methods=['GET'])
 def api_home():
-    return "This is a barebones  API home screen."
+    return "This is a barebones  API home screen.", 418
 
 
 @app.route('/api/reset', methods=['GET'])
@@ -46,24 +46,44 @@ def api_create_class(teacher_id):
      JSON format:
      {"name": ..., "description": ...}
     """
+
+    allowed_user = int(teacher_id)
+
+    authorized, message = auth.authorize_teacher(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
     info = request.json
 
     class_id = models.create_class(info['name'], teacher_id, info['description'])
-    return class_id
+
+    message['details'] = "Class created with id %d" % class_id
+    return jsonify(message), 201
 
 
 @app.route('/api/teacher/get_classes/<teacher_id>', methods=['GET'])
 def api_classes(teacher_id):
+    allowed_user = int(teacher_id)
+    authorized, message = auth.authorize_teacher(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
 
     classes = models.get_classes(teacher_id)
 
     classes_dict = utils.query_to_dict(classes, 'classes', [(0, 'id'), (1, 'name'), (3, 'description')])
 
-    return jsonify(classes_dict)
+    return jsonify(classes_dict), 201
 
 
 @app.route('/api/teacher/get_students/<class_id>', methods=['GET'])
 def api_students(class_id):
+    class_owner = models.run_simple_query("SELECT teacher_id FROM classes WHERE id = ?", (class_id,))[0][0]
+
+    allowed_user = int(class_owner)
+    authorized, message = auth.authorize_teacher(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
     students = models.get_students_in_class(class_id)
 
     students_dict = utils.query_to_dict(students, 'students', [(0, 'id'), (1, 'name')])
@@ -73,6 +93,13 @@ def api_students(class_id):
 
 @app.route('/api/teacher/list_experiments/<class_id>', methods=['GET'])
 def api_list_experiments(class_id):
+    class_owner = models.run_simple_query("SELECT teacher_id FROM classes WHERE id = ?", (class_id,))[0][0]
+
+    allowed_user = int(class_owner)
+    authorized, message = auth.authorize_teacher(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
     experiments = models.list_experiments(class_id)
     # print(experiments)
     experiments_dict = utils.query_to_dict(experiments, "experiments", [(0, 'id'), (1, 'date_created')])
@@ -82,6 +109,15 @@ def api_list_experiments(class_id):
 
 @app.route('/api/teacher/experiment_details/<experiment_id>', methods=['GET'])
 def api_experiment_details(experiment_id):
+    class_owner = models.run_simple_query("SELECT c.teacher_id FROM classes c "
+                                          "JOIN experiments e on c.id = e.class_id WHERE e.id = ?",
+                                          (experiment_id,))[0][0]
+
+    allowed_user = int(class_owner)
+    authorized, message = auth.authorize_teacher(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
     info = models.get_experiment_details(experiment_id)
 
     info_dict = json.loads(info)
@@ -91,6 +127,15 @@ def api_experiment_details(experiment_id):
 
 @app.route('/api/teacher/experiment_replies/<experiment_id>', methods=['GET'])
 def api_experiment_replies(experiment_id):
+    class_owner = models.run_simple_query("SELECT c.teacher_id FROM classes c "
+                                          "JOIN experiments e on c.id = e.class_id WHERE e.id = ?",
+                                          (experiment_id,))[0][0]
+
+    allowed_user = int(class_owner)
+    authorized, message = auth.authorize_teacher(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
     replies = models.get_teacher_experiment_replies(experiment_id)
 
     replies_dict = json.loads(replies)
@@ -100,6 +145,13 @@ def api_experiment_replies(experiment_id):
 
 @app.route('/api/teacher/get_experiments/<class_id>', methods=['GET'])
 def api_class_experiments(class_id):
+    class_owner = models.run_simple_query("SELECT teacher_id FROM classes WHERE id = ?", (class_id,))[0][0]
+
+    allowed_user = int(class_owner)
+    authorized, message = auth.authorize_teacher(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
     experiments = models.get_experiments(class_id)
 
     experiments_dict = {'experiments': []}
@@ -125,9 +177,16 @@ def api_create_experiment(class_id):
     {"questions": ["Text1", "Text2", "Text3"],
      "mins": [0, 1, 1],
      "maxs": [5, 1, 3],
-     "types": ["sociometric", "sociometric", "scale"]
+     "types": ["sociometric", "sociometric", "scale"]}
 
     """
+    class_owner = models.run_simple_query("SELECT teacher_id FROM classes WHERE id = ?", (class_id,))[0][0]
+
+    allowed_user = int(class_owner)
+    authorized, message = auth.authorize_teacher(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
     info = request.json
 
     if not ('questions' in info and 'mins' in info and 'maxs' in info and 'type' in info):
@@ -145,27 +204,46 @@ def api_create_experiment(class_id):
 
 @app.route('/api/teacher/save_template/<category_id>', methods=['POST'])
 def api_save_template(category_id):
+    class_owner = models.run_simple_query("SELECT teacher_id FROM template_categories WHERE id = ?", (category_id,))[0][0]
+
+    allowed_user = int(class_owner)
+    authorized, message = auth.authorize_teacher(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
     content = json.dumps(request.json)
+    # content = request.json
     models.save_template(category_id, content)
     return content, 201
 
 
 @app.route('/api/teacher/load_templates/<category_id>', methods=['GET'])
 def api_load_templates(category_id):
-    templates = models.load_templates(category_id)
-    # print(templates[0])
-    templates = list(map(lambda x: x[1], templates))
-    # print(list(templates))
+    class_owner = models.run_simple_query("SELECT teacher_id FROM template_categories WHERE id = ?", (category_id,))[0][0]
 
-    templates = list(map(json.loads, templates))
-    # print(templates)
-    # print(len(templates))
-    response = {"templates": templates}
-    return jsonify(response)
+    allowed_user = int(class_owner)
+    authorized, message = auth.authorize_teacher(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
+    templates = models.load_templates(category_id)
+
+    res_dict = {"templates": []}
+
+    for row in templates:
+        part_dict = {"id": row[0], "template": json.loads(row[1])}
+        res_dict["templates"].append(part_dict)
+
+    return jsonify(res_dict)
 
 
 @app.route('/api/teacher/new_category/<teacher_id>', methods=['POST'])
 def api_create_category(teacher_id):
+    allowed_user = int(teacher_id)
+    authorized, message = auth.authorize_teacher(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
     info = request.json
 
     name = info['name']
@@ -177,6 +255,11 @@ def api_create_category(teacher_id):
 
 @app.route('/api/teacher/list_categories/<teacher_id>', methods=['GET'])
 def api_list_categories(teacher_id):
+    allowed_user = int(teacher_id)
+    authorized, message = auth.authorize_teacher(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
     categories = models.all_categories(teacher_id)
 
     cat_dict = utils.query_to_dict(categories, "categories", [(0, "id"), (1, "name")])
@@ -200,6 +283,11 @@ def api_list_categories(teacher_id):
 
 @app.route('/api/student/get_questionnaires/<student_id>', methods=['GET'])
 def api_questionnaires(student_id):
+    allowed_user = int(student_id)
+    authorized, message = auth.authorize_student(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
     experiments = models.get_pending_experiments(student_id)
 
     exp_dict = utils.query_to_dict(experiments, 'experiments', [(0, 'id'), (1, 'date')])
@@ -208,14 +296,17 @@ def api_questionnaires(student_id):
 
 @app.route('/api/student/questionnaire_info/<student_id>/<experiment_id>', methods=['GET'])
 def api_questionnaire_details(student_id, experiment_id):
+    allowed_user = int(student_id)
+    authorized, message = auth.authorize_student(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
     info, students = models.get_experiment_info(student_id, experiment_id)
 
     students_dicts = [{'name': s[1], 'id': s[0]} for s in students]
 
     res_dict = {'info': models.json.loads(info), 'students': students_dicts}
 
-    # print(students)
-    # print(json.loads(info))
     return jsonify(res_dict)
 
 
@@ -237,6 +328,11 @@ def api_questionnaire_reply(student_id, experiment_id):
     }
 
     """
+
+    allowed_user = int(student_id)
+    authorized, message = auth.authorize_student(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
 
     if not models.check_experiment_exists(student_id, experiment_id):
         abort(400, description='Experiment does not exist')
@@ -343,8 +439,8 @@ def test_token():
 
     return jsonify(response)
 
-# def check_token(allowed_user):
-#
+
+
 
 ########################################################################################################################
 ########################################################################################################################
@@ -360,6 +456,7 @@ def home():
     students = models.get_all_students()
 
     return render_template('index.html', teachers=teachers, students=students)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

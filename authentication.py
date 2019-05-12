@@ -2,7 +2,7 @@ from os import path
 import jwt
 import datetime
 import sqlite3 as sql
-from flask import request
+from flask import request, jsonify
 
 import config
 
@@ -67,6 +67,14 @@ def check_email_exists(email, db_path=DB_PATH):
 def recognize_user_logged_in():
     auth_token = request.headers.get('Authorization')
 
+    # TESTING PURPOSES ONLY
+    # TODO: REMOVE FROM PRODUCTION
+    if auth_token == 'SKELETON_KEY':
+        response = {
+            "status": "SUCCESS WITH MASTER KEY"
+        }
+        return response
+
     if auth_token is None:
         response = {
             "status": "Failure",
@@ -100,12 +108,6 @@ def recognize_user_logged_in():
         }
         return response
 
-    response = {
-        "status": "Success",
-        "message": "Logged in",
-        "user_id": user_id,
-    }
-
     con = sql.connect(DB_PATH)
     cur = con.cursor()
 
@@ -116,6 +118,84 @@ def recognize_user_logged_in():
         response = {
             "status": "Failure",
             "message": "No such user in the database",
+            "role": None,
+            "id": None,
+            "user_id": None
         }
+        return response
+
+    response = {
+        "status": "Success",
+        "message": "Logged in",
+        "user_id": user_id,
+    }
+
+    student_id, teacher_id = ids[0]
+    # print(student_id, teacher_id)
+    # print(student_id is None)
+
+    if student_id is None and teacher_id is not None:
+        response["role"] = "teacher"
+        response["id"] = teacher_id
+    elif teacher_id is None and student_id is not None:
+        response["role"] = "student"
+        response["id"] = student_id
+    else:
+        response = {
+            "status": "Failure",
+            "message": "Database error",
+            "user_id": None,
+            "role": None,
+            "id": None,
+        }
+        return response
 
     return response
+
+
+def authorize_teacher(teacher_id):
+    login_info = recognize_user_logged_in()
+
+    # TODO: REMOVE FROM PRODUCTION
+    if login_info["status"] == "SUCCESS WITH MASTER KEY":
+        response = {"status": "SUCCESS WITH MASTER KEY"}
+        return True, response
+
+    if login_info["status"] != "Success":
+        response = {"status": "Failure", "message": "Login failure: " + login_info["message"]}
+        return False, response
+
+    if login_info["role"] != "teacher":
+        response = {"status": "Failure", "message": "This is only available to teachers"}
+        return False, response
+
+    if login_info["id"] != teacher_id:
+        response = {"status": "Failure", "message": "Wrong user"}
+        return False, response
+
+    response = {"status": "Success", "message": "Correct user"}
+    return True, response
+
+
+def authorize_student(student_id):
+    login_info = recognize_user_logged_in()
+
+    # TODO: REMOVE FROM PRODUCTION
+    if login_info["status"] == "SUCCESS WITH MASTER KEY":
+        response = {"status": "SUCCESS WITH MASTER KEY"}
+        return True, response
+
+    if login_info["status"] != "Success":
+        response = {"status": "Failure", "message": "Login failure: " + login_info["message"]}
+        return False, response
+
+    if login_info["role"] != "student":
+        response = {"status": "Failure", "message": "This is only available to students"}
+        return False, response
+
+    if login_info["id"] != student_id:
+        response = {"status": "Failure", "message": "Wrong user"}
+        return False, response
+
+    response = {"status": "Success", "message": "Correct user"}
+    return True, response

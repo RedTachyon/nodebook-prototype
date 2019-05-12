@@ -2,12 +2,24 @@ import sqlite3 as sql
 from os import path
 import time
 import json
+from werkzeug.security import generate_password_hash
 
 ROOT = path.dirname(path.relpath(__file__))
+DB_PATH = path.join(ROOT, 'nodedata.db')
 
+
+def run_simple_query(query, args):
+    con = sql.connect(DB_PATH)
+    cur = con.cursor()
+    cur.execute(query, args)
+    result = cur.fetchall()
+    con.commit()
+    con.close()
+
+    return result
 
 def initialize():
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     with open(path.join(ROOT, 'schema.sql')) as f:
@@ -18,12 +30,43 @@ def initialize():
         script = f.read()
         cur.executescript(script)
 
-    # con.commit()
+    con.close()
+
+    create_test_users()
+
+
+def create_test_users():
+    """
+    Creates users for testing authentication.
+    """
+    insert_list = []
+    students = get_all_students()
+    teachers = get_all_teachers()
+
+    # I'm aware this is very unsafe - only to be used to generate fake data from a predefined set of users.
+    for (id_, name) in students:
+        pwd_hash = generate_password_hash(str(id_))
+        insert_list.append(f"INSERT INTO users (email, password, student_id) "
+                           f"VALUES ('{name}', '{pwd_hash}', '{id_}');")
+
+    for (id_, name) in teachers:
+        pwd_hash = generate_password_hash(str(id_))
+        insert_list.append(f"INSERT INTO users (email, password, teacher_id) "
+                           f"VALUES ('{name}', '{pwd_hash}', '{id_}');")
+
+    script = '\n'.join(insert_list)
+
+    # print(script)
+
+    con = sql.connect(DB_PATH)
+    cur = con.cursor()
+    cur.executescript(script)
+
     con.close()
 
 
 def create_teacher(name):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
     cur.execute("INSERT INTO teachers (name) VALUES (?)", (name,))
     con.commit()
@@ -31,7 +74,7 @@ def create_teacher(name):
 
 
 def create_class(name, teacher_id, description):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
     cur.execute("INSERT INTO classes (name, teacher_id, description) VALUES (?, ?, ?)", (name, teacher_id, description))
 
@@ -44,7 +87,7 @@ def create_class(name, teacher_id, description):
 
 
 def get_students_in_class(class_id):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
     cur.execute("""SELECT s.id, s.name FROM students s
                     LEFT OUTER JOIN classes_students cs ON s.id = cs.student_id
@@ -55,16 +98,24 @@ def get_students_in_class(class_id):
 
 
 def get_all_students():
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
-    cur.execute("""SELECT students.id, students.name FROM students""")
+    cur.execute("""SELECT id, name FROM students""")
+    students = cur.fetchall()
+    con.close()
+    return students
+
+
+def get_all_teachers():
+    con = sql.connect(DB_PATH)
+    cur = con.cursor()
+    cur.execute("""SELECT id, name FROM teachers""")
     students = cur.fetchall()
     con.close()
     return students
 
 
 def generate_result_json(questions, mins, maxs, types):
-
     output = {'questions': []}
 
     for i, (question, min_ans, max_ans, type_) in enumerate(zip(questions, mins, maxs, types)):
@@ -81,11 +132,10 @@ def generate_result_json(questions, mins, maxs, types):
 
 
 def create_questionnaire(questions, mins, maxs, class_id, types):
-
     # if type_ not in ('sociometric', 'scale'):
     #     return -1
 
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     timestamp = time.time()
@@ -105,10 +155,9 @@ def create_questionnaire(questions, mins, maxs, class_id, types):
 
 
 def push_questionnaire(experiment_id, class_id):
-
     students = get_students_in_class(class_id)  # id, name
 
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     for (student_id, _) in students:
@@ -120,7 +169,7 @@ def push_questionnaire(experiment_id, class_id):
 
 
 def get_classes(teacher_id):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
     cur.execute("""SELECT id, name, teacher_id, description FROM classes
                     WHERE teacher_id = ?""", (teacher_id,))
@@ -130,7 +179,7 @@ def get_classes(teacher_id):
 
 
 def get_teachers():
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
     cur.execute("SELECT * FROM teachers")
     teachers = cur.fetchall()
@@ -139,7 +188,7 @@ def get_teachers():
 
 
 def get_experiments(class_id):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
     cur.execute("""SELECT id, info, replies, class_id, date_created, finished FROM experiments
                     WHERE class_id = ?""", (class_id,))
@@ -149,7 +198,7 @@ def get_experiments(class_id):
 
 
 def list_experiments(class_id):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     cur.execute("SELECT id, date_created FROM experiments WHERE class_id=?", (class_id,))
@@ -160,7 +209,7 @@ def list_experiments(class_id):
 
 
 def get_experiment_details(experiment_id):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     cur.execute("SELECT info FROM experiments WHERE id = ?", (experiment_id,))
@@ -171,7 +220,7 @@ def get_experiment_details(experiment_id):
 
 
 def get_teacher_experiment_replies(experiment_id):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     cur.execute("SELECT replies FROM experiments WHERE id = ?", (experiment_id,))
@@ -182,7 +231,7 @@ def get_teacher_experiment_replies(experiment_id):
 
 
 def get_pending_experiments(student_id):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
     cur.execute("""SELECT e.id, e.date_created, e.class_id
                     FROM experiments e
@@ -199,7 +248,7 @@ def get_pending_experiments(student_id):
 
 
 def get_experiment_info(student_id, experiment_id):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     cur.execute("""SELECT info, class_id FROM experiments
@@ -221,7 +270,7 @@ def get_experiment_info(student_id, experiment_id):
 
 
 def get_experiment_replies(experiment_id):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     cur.execute("SELECT replies FROM experiments WHERE id = ?", (experiment_id,))
@@ -247,7 +296,7 @@ def update_results(student_id, experiment_id, student_response):
 
     new_replies = json.dumps(replies_dict)
 
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     cur.execute("UPDATE experiments SET replies = ? WHERE id = ?", (new_replies, experiment_id))
@@ -261,7 +310,7 @@ def update_results(student_id, experiment_id, student_response):
 
 
 def check_experiment_exists(student_id, experiment_id):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     cur.execute("SELECT * FROM experiments_students WHERE student_id = ? AND experiment_id = ?",
@@ -278,7 +327,7 @@ def check_experiment_exists(student_id, experiment_id):
 
 
 def save_template(category_id, content):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     cur.execute("INSERT INTO templates (content, category_id) VALUES (?, ?)", (content, category_id))
@@ -288,7 +337,7 @@ def save_template(category_id, content):
 
 
 def load_templates(category_id):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     cur.execute("SELECT id, content FROM templates WHERE category_id = ?", (category_id,))
@@ -302,7 +351,7 @@ def load_templates(category_id):
 
 
 def new_category(teacher_id, name):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     cur.execute("INSERT INTO template_categories (name, teacher_id) VALUES (?, ?)", (name, teacher_id))
@@ -315,7 +364,7 @@ def new_category(teacher_id, name):
 
 
 def all_categories(teacher_id):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     cur.execute("SELECT id, name FROM template_categories WHERE teacher_id = ?", (teacher_id,))
@@ -332,7 +381,7 @@ def create_user(email, password_hash, name, role):
     if role not in ('teacher', 'student'):
         return -1
 
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     if role == "teacher":
@@ -360,7 +409,7 @@ def create_user(email, password_hash, name, role):
 
 
 def get_user_info(email):
-    con = sql.connect(path.join(ROOT, 'nodedata.db'))
+    con = sql.connect(DB_PATH)
     cur = con.cursor()
 
     cur.execute("SELECT id, password FROM users WHERE email = ?", (email,))
@@ -369,3 +418,27 @@ def get_user_info(email):
     con.close()
 
     return pwd
+
+
+def teacher_user_id(teacher_id):
+    con = sql.connect(DB_PATH)
+    cur = con.cursor()
+
+    cur.execute("SELECT id FROM users WHERE teacher_id = ?", (teacher_id,))
+    id_ = cur.fetchall()
+
+    con.close()
+
+    return id_
+
+
+def student_user_id(student_id):
+    con = sql.connect(DB_PATH)
+    cur = con.cursor()
+
+    cur.execute("SELECT id FROM users WHERE student_id = ?", (student_id,))
+    id_ = cur.fetchall()
+
+    con.close()
+
+    return id_

@@ -325,6 +325,17 @@ You can access every endpoint by including a header Authorization: SKELETON_KEY
 
 The test user's email/username is their name, and the password is their student_id/teacher_id (whichever is appropriate)
 
+Response is formatted as follows. Depending on whether a student or teacher logs in, student_id or teacher_id is not null
+
+```json
+{
+"auth_token": "blblbltokenblblbl",
+"message": "Successfully logged in",
+"status": "Success",
+"student_id": 192,
+"teacher_id": null
+}
+```
 
 <br></br>
 

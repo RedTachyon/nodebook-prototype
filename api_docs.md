@@ -323,6 +323,9 @@ and be in the format "Bearer \<token\>"
 
 You can access every endpoint by including a header Authorization: SKELETON_KEY
 
+The test user's email/username is their name, and the password is their student_id/teacher_id (whichever is appropriate)
+
+
 <br></br>
 
 **/auth/logout**

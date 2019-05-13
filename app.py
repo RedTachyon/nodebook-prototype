@@ -369,6 +369,9 @@ def register_user():
         # Make it a proper response?
         return jsonify({"id": -1, "status": "Nope, email taken"}), 401
 
+    if role not in ('teacher', 'student'):
+        return jsonify({"id": -1, "status": "Role has to be either teacher or student"}), 401
+
     pwd_hash = generate_password_hash(password)
     user_id = models.create_user(email, pwd_hash, name, role)
 

@@ -18,6 +18,7 @@ def run_simple_query(query, args):
 
     return result
 
+
 def initialize():
     con = sql.connect(DB_PATH)
     cur = con.cursor()

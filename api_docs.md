@@ -294,3 +294,29 @@ The response should be formatted as follows:
 In this case, the student chose classmates with id's 1, 6, 7 as a response to the first question (which is sociometric).
 They also chose 3 as the response to the second question, which is a scale question.
 Finally they chose one student with id 1 as a response to the third (sociometric) question.
+
+## Authentication
+
+**/auth/register**
+
+POST
+
+Expects a json with fields "email", "password", "name", "role". 
+The first three are self-explanatory (email doesn't have to be an actual email, can be a username - has to be unique)
+The last one ("role") has to be either "teacher" or "student"
+
+
+<br></br>
+
+**/auth/login**
+
+POST
+
+Expects a json with fields "email" and "password", self-explanatory
+
+Returns a json containing auth_token which should be saved to cookies
+
+When using any API endpoints, include that token in the request headers. The header should be called Authorization, 
+and be in the format "Bearer \<token\>"
+
+You can access every endpoint by including a header Authorization: SKELETON_KEY

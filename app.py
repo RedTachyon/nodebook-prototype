@@ -406,10 +406,14 @@ def login_user():
 
     token = auth.encode_auth_token(user_id)
 
+    teacher_id, student_id = models.identify_user(user_id)[0]
+
     response = {
         "status": "Success",
         "message": "Successfully logged in",
-        "auth_token": token.decode()
+        "auth_token": token.decode(),
+        "teacher_id": teacher_id,
+        "student_id": student_id
     }
 
     return jsonify(response)

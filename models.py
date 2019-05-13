@@ -443,3 +443,15 @@ def student_user_id(student_id):
     con.close()
 
     return id_
+
+
+def identify_user(user_id):
+    con = sql.connect(DB_PATH)
+    cur = con.cursor()
+
+    cur.execute("SELECT teacher_id, student_id FROM users WHERE id = ?", (user_id,))
+    id_ = cur.fetchall()
+
+    con.close()
+
+    return id_

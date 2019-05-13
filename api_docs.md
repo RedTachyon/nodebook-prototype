@@ -322,3 +322,11 @@ When using any API endpoints, include that token in the request headers. The hea
 and be in the format "Bearer \<token\>"
 
 You can access every endpoint by including a header Authorization: SKELETON_KEY
+
+<br></br>
+
+**/auth/logout**
+
+POST
+
+Doesn't actually need a body. Just call it and the token will be blacklisted.

@@ -101,7 +101,7 @@ def recognize_user_logged_in():
     if isinstance(user_id, str):
         response = {
             "status": "Failure",
-            "message": "Wrong token",
+            "message": "Wrong token: " + user_id,
             "role": None,
             "id": None,
             "user_id": None

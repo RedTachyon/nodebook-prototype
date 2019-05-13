@@ -4,6 +4,7 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 
 import json
+import time
 
 import models
 
@@ -38,6 +39,15 @@ def reset_data():
     models.update_results(2, experiment_id, [[1, 6, 7], 3, [1]])
 
     return "Database has been reset", 201
+
+
+@app.route('/test/file', methods=['POST'])
+def upload_file():
+    print(request.files)
+    print(request.json)
+    print(request.args)
+    # print(request.files['file'])
+    return "Sup"
 
 
 @app.route('/api/teacher/create_class/<teacher_id>', methods=['POST'])
@@ -402,9 +412,8 @@ def login_user():
     return jsonify(response)
 
 
-@app.route('/auth/test', methods=['GET'])
-def test_token():
-    # print(request.headers.get('Authorization'))
+@app.route('/auth/logout', methods=['POST'])
+def logout_user():
     auth_token = request.headers.get('Authorization')
 
     if auth_token is None:
@@ -431,6 +440,45 @@ def test_token():
         }
         return jsonify(response), 400
 
+    models.run_simple_query("INSERT INTO blacklist (token, blacklisted_on) VALUES (?, ?)", (token, time.time()))
+
+    response = {
+        "status": "Success",
+        "message": "Logged out",
+        "user_id": user_id
+    }
+
+    return jsonify(response)
+
+
+@app.route('/auth/test', methods=['GET'])
+def test_token():
+    auth_token = request.headers.get('Authorization')
+
+    if auth_token is None:
+        response = {
+            "status": "Failure",
+            "message": "Need an Authorization header with the format: Bearer <token>"
+        }
+        return jsonify(response), 400
+
+    try:
+        token = auth_token.split(" ")[1]
+    except IndexError:
+        response = {
+            "status": "Failure",
+            "message": "Malformed auth token. Use the format: Bearer <token>"
+        }
+        return jsonify(response), 400
+
+    user_id = auth.decode_auth_token(token)
+    if isinstance(user_id, str):
+        response = {
+            "status": "Failure",
+            "message": "Wrong token: " + user_id
+        }
+        return jsonify(response), 400
+
     response = {
         "status": "Success",
         "message": "Logged in",
@@ -438,8 +486,6 @@ def test_token():
     }
 
     return jsonify(response)
-
-
 
 
 ########################################################################################################################

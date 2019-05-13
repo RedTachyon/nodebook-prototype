@@ -1,3 +1,5 @@
+# NOTE: use HTTPS instead of HTTP
+
 General note: I'm using the words questionnaire and experiment interchangeably as I'm unable to make up my mind
 
 ## Teacher API

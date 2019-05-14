@@ -145,7 +145,7 @@ The API endpoint above has been split into three parts:
 
 **/api/teacher/experiment_details/<experiment_id>**
 
-**/api/teacher/experiment_replies**
+**/api/teacher/experiment_replies/<experiment_id>**
 
 They all do more or less what you expect them to do - the first one sends a list of (id, date) info for each experiment,
 the second one gives you questions and info like that, and the third one gives you replies given by the students.
@@ -179,6 +179,39 @@ POST
 
 Creates a new class assigned to the teacher, expects a JSON with "name" and "description" fields
 
+<br></br>
+
+**/api/teacher/replies_graph/<experiment_id>**
+
+GET
+
+Returns all the info necessary for making the fancy graph
+
+```
+{
+    teacher_name: "blblname",
+    questions: [
+        {
+        question: ...,
+        type: ...,
+        nodes: [
+            {id: 1, label: "Kata", group: 1,},
+            {id; 2, ...}
+            ],
+            
+        edges: [
+            {from: 1, to: 2},
+            {from: 5, to: 3},
+            ...
+            ]
+        },
+        {
+        nodes: ..., edges: ...
+        }
+]
+}
+    
+```
 
 ### Template management
 
@@ -205,6 +238,7 @@ Saves a new category to the chosen teacher, needs a JSON with "name" field
 GET
 
 Lists all categories that the teacher has created
+
 
 ## Student API
 
@@ -296,6 +330,7 @@ The response should be formatted as follows:
 In this case, the student chose classmates with id's 1, 6, 7 as a response to the first question (which is sociometric).
 They also chose 3 as the response to the second question, which is a scale question.
 Finally they chose one student with id 1 as a response to the third (sociometric) question.
+
 
 ## Authentication
 

@@ -27,13 +27,21 @@ def initialize():
         script = f.read()
         cur.executescript(script)
 
-    with open(path.join(ROOT, 'seed.sql')) as f:
+    con.close()
+
+
+def seed_data(filename):
+    con = sql.connect(DB_PATH)
+    cur = con.cursor()
+
+    with open(path.join(ROOT, filename)) as f:
         script = f.read()
         cur.executescript(script)
 
     con.close()
 
     create_test_users()
+
 
 
 def create_test_users():

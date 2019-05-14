@@ -25,6 +25,7 @@ def api_home():
 @app.route('/api/reset', methods=['GET'])
 def reset_data():
     models.initialize()
+    models.seed_data('seed.sql')
 
     # Create an experiment for class_id=1
     experiment_id = models.create_questionnaire(
@@ -40,6 +41,31 @@ def reset_data():
     models.update_results(3, experiment_id, [[2, 19, 15], 1, [5]])
 
     return "Database has been reset", 201
+
+
+@app.route('/demo/reset', methods=['GET'])
+def prepare_demo():
+    models.initialize()
+    models.seed_data('demoseed.sql')
+
+    experiment_id = models.create_questionnaire(
+        ["Who do you want to work with this week?", "Who is your best friend?"],
+        [0, 1], [3, 1], 1,
+        ["sociometric", "sociometric"]
+    )
+    models.push_questionnaire(experiment_id, 1)
+
+    models.update_results(1, experiment_id, [[5, 3, 2], [6]])
+    models.update_results(2, experiment_id, [[1, 6, 7], [1]])
+    models.update_results(3, experiment_id, [[2, 1, 5], [5]])
+    models.update_results(4, experiment_id, [[2, 5], [4]])
+    models.update_results(5, experiment_id, [[1, 4], [3]])
+    models.update_results(6, experiment_id, [[2], [2]])
+    models.update_results(7, experiment_id, [[], [2]])
+
+    return "Database ready for demo", 201
+
+
 
 
 @app.route('/test/file', methods=['POST'])
@@ -498,31 +524,33 @@ def test_token():
 
 @app.route('/api/teacher/replies_graph/<experiment_id>', methods=['GET'])
 def graph_api(experiment_id):
+    # Authentication
     class_owner = models.run_simple_query("SELECT c.teacher_id FROM classes c "
                                           "JOIN experiments e on c.id = e.class_id WHERE e.id = ?",
                                           (experiment_id,))[0][0]
-
     allowed_user = int(class_owner)
     authorized, message = auth.authorize_teacher(allowed_user)
     if not authorized:
         return jsonify(message), 401
 
+    # Get the question text
     questions = models.get_experiment_details(experiment_id)
     questions = json.loads(questions)
 
+    # Get the class id and teacher's name
     teacher_query = """SELECT c.id, t.name FROM experiments e 
     JOIN classes c on e.class_id = c.id 
     JOIN teachers t on c.teacher_id = t.id
     WHERE e.id = ?"""
     class_id, teacher_name = models.run_simple_query(teacher_query, (experiment_id,))[0]
 
+    # Get the raw replies
     replies = models.get_experiment_replies(experiment_id)
     replies = json.loads(replies)
 
+    # Get the list of students for nodes
     students = models.get_students_in_class(class_id)
     students = utils.query_to_dict(students, 'nodes', [(0, 'id'), (1, 'label'), (0, 'group')])
-
-    # print(replies)
 
     response = {'teacher': teacher_name, 'questions': [], 'nodes': students['nodes']}
 
@@ -540,30 +568,6 @@ def graph_api(experiment_id):
 
     return jsonify(response)
 
-
-"""
-{
-teacher_name: "
-questions: [
-    {
-    question: ...,
-    time: ...,
-    nodes: [
-        {id: 1, label: "Kata", group: 1, ...},
-        {id; 2, ....}
-        ],
-        
-    edges: [
-        {from: 1, to: 2},
-        {from: 5, to: 3},
-        ...
-        ]
-    },
-    {
-    nodes: ..., edges: ...
-    }
-    
-"""
 
 ########################################################################################################################
 ########################################################################################################################

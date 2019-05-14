@@ -28,7 +28,7 @@ def reset_data():
 
     # Create an experiment for class_id=1
     experiment_id = models.create_questionnaire(
-        ["Socio1", "Scalar2", "Socio3"],
+        ["Who do you want to work with this week?", "How happy were you today?", "Who is your best friend?"],
         [0, 1, 1], [3, 3, 1], 1,
         ["sociometric", "scalar", "sociometric"]
     )
@@ -37,6 +37,7 @@ def reset_data():
     # Create a response
     models.update_results(1, experiment_id, [[], 2, [6]])
     models.update_results(2, experiment_id, [[1, 6, 7], 3, [1]])
+    models.update_results(3, experiment_id, [[2, 19, 15], 1, [5]])
 
     return "Database has been reset", 201
 
@@ -383,7 +384,7 @@ def register_user():
 def login_user():
     info = request.json
     email, password = info['email'], info['password']
-    print(email, password)
+    # print(email, password)
 
     info = models.get_user_info(email)
     if len(info) == 0:
@@ -395,7 +396,7 @@ def login_user():
 
     user_id, pwd_hash = info[0]
 
-    print(user_id, pwd_hash)
+    # print(user_id, pwd_hash)
 
     if not check_password_hash(pwd_hash, password):
         response = {
@@ -494,6 +495,75 @@ def test_token():
 
     return jsonify(response)
 
+
+@app.route('/api/teacher/replies_graph/<experiment_id>', methods=['GET'])
+def graph_api(experiment_id):
+    class_owner = models.run_simple_query("SELECT c.teacher_id FROM classes c "
+                                          "JOIN experiments e on c.id = e.class_id WHERE e.id = ?",
+                                          (experiment_id,))[0][0]
+
+    allowed_user = int(class_owner)
+    authorized, message = auth.authorize_teacher(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
+    questions = models.get_experiment_details(experiment_id)
+    questions = json.loads(questions)
+
+    teacher_query = """SELECT c.id, t.name FROM experiments e 
+    JOIN classes c on e.class_id = c.id 
+    JOIN teachers t on c.teacher_id = t.id
+    WHERE e.id = ?"""
+    class_id, teacher_name = models.run_simple_query(teacher_query, (experiment_id,))[0]
+
+    replies = models.get_experiment_replies(experiment_id)
+    replies = json.loads(replies)
+
+    students = models.get_students_in_class(class_id)
+    students = utils.query_to_dict(students, 'nodes', [(0, 'id'), (1, 'label'), (0, 'group')])
+
+    # print(replies)
+
+    response = {'teacher': teacher_name, 'questions': [], 'nodes': students['nodes']}
+
+    for i, question in enumerate(questions['questions']):
+        question_dict = {'text': question['text'], 'type': question['type'], 'edges': []}
+        # print(question_dict)
+        response['questions'].append(question_dict)
+
+        # Bit of spaghetti, but builds the edges array
+        for reply_dict in replies['replies']:
+            question_reply = reply_dict['response'][i]
+            if isinstance(question_reply, list):
+                for reply in question_reply:
+                    question_dict['edges'].append({'from': reply_dict['id'], 'to': reply})
+
+    return jsonify(response)
+
+
+"""
+{
+teacher_name: "
+questions: [
+    {
+    question: ...,
+    time: ...,
+    nodes: [
+        {id: 1, label: "Kata", group: 1, ...},
+        {id; 2, ....}
+        ],
+        
+    edges: [
+        {from: 1, to: 2},
+        {from: 5, to: 3},
+        ...
+        ]
+    },
+    {
+    nodes: ..., edges: ...
+    }
+    
+"""
 
 ########################################################################################################################
 ########################################################################################################################

@@ -257,7 +257,7 @@ def get_experiment_info(student_id, experiment_id):
                     """, (experiment_id,))
 
     info, class_id = cur.fetchall()[0]
-    print(info)
+    # print(info)
 
     # Get all other students in class
     cur.execute("""SELECT s.id, s.name FROM students s
@@ -293,7 +293,7 @@ def update_results(student_id, experiment_id, student_response):
     replies = get_experiment_replies(experiment_id)
     replies_dict = json.loads(replies)
 
-    replies_dict['replies'].append({"id": student_id, "response": student_response})
+    replies_dict['replies'].append({"id": int(student_id), "response": student_response})
 
     new_replies = json.dumps(replies_dict)
 
@@ -455,3 +455,4 @@ def identify_user(user_id):
     con.close()
 
     return id_
+

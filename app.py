@@ -71,13 +71,13 @@ def prepare_demo():
     )
     models.push_questionnaire(experiment_id, 1)
 
-    models.update_results(1, experiment_id, [[5, 3, 2], [6]])
-    models.update_results(2, experiment_id, [[1, 6, 7], [1]])
-    models.update_results(3, experiment_id, [[2, 1, 5], [5]])
-    models.update_results(4, experiment_id, [[2, 5], [4]])
-    models.update_results(5, experiment_id, [[1, 4], [3]])
+    models.update_results(1, experiment_id, [[5], [6]])
+    models.update_results(2, experiment_id, [[3], [1]])
+    models.update_results(3, experiment_id, [[2], [5]])
+    models.update_results(4, experiment_id, [[2], [4]])
+    models.update_results(5, experiment_id, [[4], [3]])
     models.update_results(6, experiment_id, [[2], [2]])
-    models.update_results(7, experiment_id, [[], [2]])
+    models.update_results(7, experiment_id, [[7], [2]])
 
     return "Database ready for demo", 201
 

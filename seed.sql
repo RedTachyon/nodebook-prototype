@@ -591,3 +591,5 @@ insert into classes_students (class_id, student_id) values (11, 198);
 insert into classes_students (class_id, student_id) values (14, 198);
 insert into classes_students (class_id, student_id) values (12, 200);
 --------------------------------------------- BREAK ---------------------------------------------------
+insert into template_categories (name, teacher_id) values ('Sociometrics', 1);
+insert into template_categories (name, teacher_id) values ('Class atmosphere', 1);

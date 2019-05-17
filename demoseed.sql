@@ -16,3 +16,5 @@ insert into classes_students (class_id, student_id) values (1, 4);
 insert into classes_students (class_id, student_id) values (1, 5);
 insert into classes_students (class_id, student_id) values (1, 6);
 insert into classes_students (class_id, student_id) values (1, 7);
+-- CATEGORY
+insert into template_categories (name, teacher_id) values ('Sociometrics', 1);

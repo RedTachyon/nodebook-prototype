@@ -43,7 +43,6 @@ def seed_data(filename):
     create_test_users()
 
 
-
 def create_test_users():
     """
     Creates users for testing authentication.

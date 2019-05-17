@@ -14,8 +14,6 @@ import authentication as auth
 app = Flask(__name__)
 CORS(app)
 
-# TODO: Add images
-
 
 @app.route('/api/', methods=['GET'])
 def api_home():
@@ -36,9 +34,27 @@ def reset_data():
     models.push_questionnaire(experiment_id, 1)
 
     # Create a response
-    models.update_results(1, experiment_id, [[], 2, [6]])
+    models.update_results(1, experiment_id, [[2, 7, 3], 2, [6]])
     models.update_results(2, experiment_id, [[1, 6, 7], 3, [1]])
     models.update_results(3, experiment_id, [[2, 19, 15], 1, [5]])
+    models.update_results(4, experiment_id, [[16, 2, 1], 1, [5]])
+    models.update_results(5, experiment_id, [[3, 1, 10], 1, [5]])
+    models.update_results(6, experiment_id, [[13, 12, 4], 1, [5]])
+    models.update_results(7, experiment_id, [[1, 2, 3], 1, [5]])
+    models.update_results(8, experiment_id, [[17, 18, 14], 1, [5]])
+    models.update_results(9, experiment_id, [[20, 1, 10], 1, [5]])
+    models.update_results(10, experiment_id, [[15, 3, 12], 1, [5]])
+    models.update_results(11, experiment_id, [[13, 2, 9], 1, [5]])
+    models.update_results(12, experiment_id, [[7, 3, 15], 1, [5]])
+    models.update_results(13, experiment_id, [[8, 5, 16], 1, [5]])
+    models.update_results(14, experiment_id, [[1, 9, 20], 1, [5]])
+    models.update_results(15, experiment_id, [[12, 4, 18], 1, [5]])
+    models.update_results(16, experiment_id, [[1, 8, 9], 1, [5]])
+    models.update_results(17, experiment_id, [[1, 7, 2], 1, [5]])
+    models.update_results(18, experiment_id, [[18, 19, 12], 1, [5]])
+    models.update_results(19, experiment_id, [[1, 2, 5], 1, [5]])
+    models.update_results(20, experiment_id, [[12, 4, 17], 1, [5]])
+
 
     return "Database has been reset", 201
 
@@ -64,8 +80,6 @@ def prepare_demo():
     models.update_results(7, experiment_id, [[], [2]])
 
     return "Database ready for demo", 201
-
-
 
 
 @app.route('/test/file', methods=['POST'])
@@ -551,6 +565,9 @@ def graph_api(experiment_id):
     # Get the list of students for nodes
     students = models.get_students_in_class(class_id)
     students = utils.query_to_dict(students, 'nodes', [(0, 'id'), (1, 'label'), (0, 'group')])
+    # for student in students:
+    #     student['shape'] = 'circularImage'
+    #     student['image'] = ''
 
     response = {'teacher': teacher_name, 'questions': [], 'nodes': students['nodes']}
 

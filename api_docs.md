@@ -153,7 +153,7 @@ Figuring out the exact format shall be left as an exercise for the reader.
 
 <br></br>
 
-**/api/teacher/create_experiment/<class_id>/<student_id>**
+**/api/teacher/create_experiment/<class_id>**
 
 POST
 
@@ -350,6 +350,8 @@ The last one ("role") has to be either "teacher" or "student"
 POST
 
 Expects a json with fields "email" and "password", self-explanatory
+
+Include the header Content-Type: application/json
 
 Returns a json containing auth_token which should be saved to cookies
 

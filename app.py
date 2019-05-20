@@ -55,7 +55,6 @@ def reset_data():
     models.update_results(19, experiment_id, [[1], 1, [5]])
     models.update_results(20, experiment_id, [[12], 1, [5]])
 
-
     return "Database has been reset", 201
 
 
@@ -80,15 +79,6 @@ def prepare_demo():
     models.update_results(7, experiment_id, [[7], [2]])
 
     return "Database ready for demo", 201
-
-
-@app.route('/test/file', methods=['POST'])
-def upload_file():
-    print(request.files)
-    print(request.json)
-    print(request.args)
-    # print(request.files['file'])
-    return "Sup"
 
 
 @app.route('/api/teacher/create_class/<teacher_id>', methods=['POST'])
@@ -414,9 +404,13 @@ def register_user():
         return jsonify({"id": -1, "status": "Role has to be either teacher or student"}), 401
 
     pwd_hash = generate_password_hash(password)
-    user_id = models.create_user(email, pwd_hash, name, role)
+    student_id, teacher_id, user_id = models.create_user(email, pwd_hash, name, role)
 
-    response = {"id": user_id, "status": "Worked"}
+    response = {"id": user_id, "student_id": student_id, "teacher_id": teacher_id, "status": "Worked"}
+
+    if role == 'student':
+        models.run_simple_query("INSERT INTO classes_students (class_id, student_id) VALUES (1, ?)", (student_id,))
+
     return jsonify(response)
 
 

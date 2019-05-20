@@ -408,12 +408,12 @@ def create_user(email, password_hash, name, role):
     cur.execute("INSERT INTO users (email, password, student_id, teacher_id) VALUES (?, ?, ?, ?)",
                 (email, password_hash, student_id, teacher_id))
 
-    id_ = cur.lastrowid
+    user_id = cur.lastrowid
 
     con.commit()
     con.close()
 
-    return id_
+    return student_id, teacher_id, user_id
 
 
 def get_user_info(email):

@@ -236,7 +236,7 @@ def api_create_experiment(class_id):
     # if info['type'] not in ('sociometric', 'scale'):
     #     return "Wrong type", 400
 
-    experiment_id = models.create_questionnaire(info['questions'], info['mins'], info['maxs'], class_id, info['types'])
+    experiment_id = models.create_questionnaire(info['questions'], info['mins'], info['maxs'], class_id, info['type'])
 
     models.push_questionnaire(experiment_id, class_id)
 
@@ -450,6 +450,33 @@ def login_user():
         "teacher_id": teacher_id,
         "student_id": student_id
     }
+
+    return jsonify(response)
+
+
+@app.route('/demo/register', methods=['POST'])
+def demo_register_login():
+    info = request.json
+    email, password, name, role = info['email'], info['password'], info['name'], info['role']
+    role = 'student'
+
+    if auth.check_email_exists(email):
+        # Make it a proper response?
+        return jsonify({"id": -1, "status": "Nope, email taken"}), 401
+
+    if role not in ('teacher', 'student'):
+        return jsonify({"id": -1, "status": "Role has to be either teacher or student"}), 401
+
+    pwd_hash = generate_password_hash(password)
+    student_id, teacher_id, user_id = models.create_user(email, pwd_hash, name, role)
+
+    response = {"id": user_id, "student_id": student_id, "teacher_id": teacher_id, "status": "Worked"}
+
+    if role == 'student':
+        models.run_simple_query("INSERT INTO classes_students (class_id, student_id) VALUES (1, ?)", (student_id,))
+
+    token = auth.encode_auth_token(user_id)
+    response['token'] = token
 
     return jsonify(response)
 

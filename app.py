@@ -63,20 +63,20 @@ def prepare_demo():
     models.initialize()
     models.seed_data('demoseed.sql')
 
-    experiment_id = models.create_questionnaire(
-        ["Who do you want to work with this week?", "Who is your best friend?"],
-        [0, 1], [3, 1], 1,
-        ["sociometric", "sociometric"]
-    )
-    models.push_questionnaire(experiment_id, 1)
-
-    models.update_results(1, experiment_id, [[5], [6]])
-    models.update_results(2, experiment_id, [[3], [1]])
-    models.update_results(3, experiment_id, [[2], [5]])
-    models.update_results(4, experiment_id, [[2], [4]])
-    models.update_results(5, experiment_id, [[4], [3]])
-    models.update_results(6, experiment_id, [[2], [2]])
-    models.update_results(7, experiment_id, [[7], [2]])
+    # experiment_id = models.create_questionnaire(
+    #     ["Who do you want to work with this week?", "Who is your best friend?"],
+    #     [0, 1], [3, 1], 1,
+    #     ["sociometric", "sociometric"]
+    # )
+    # models.push_questionnaire(experiment_id, 1)
+    #
+    # models.update_results(1, experiment_id, [[5], [6]])
+    # models.update_results(2, experiment_id, [[3], [1]])
+    # models.update_results(3, experiment_id, [[2], [5]])
+    # models.update_results(4, experiment_id, [[2], [4]])
+    # models.update_results(5, experiment_id, [[4], [3]])
+    # models.update_results(6, experiment_id, [[2], [2]])
+    # models.update_results(7, experiment_id, [[7], [2]])
 
     return "Database ready for demo", 201
 

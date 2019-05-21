@@ -8,8 +8,8 @@ URL = "https://redtachyon.eu.pythonanywhere.com"
 i = 1
 j = 1
 
-TEACHER_TOKEN = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NjYyMDI5MDgsImlhdCI6MTU1ODQyNjkwOCwic3ViIjo4fQ.Y3Nnru756J9Ag7eESzUhacggAurXPUIO-oiEYs3lA4Y'
-
+# TEACHER_TOKEN = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NjYyMDI5MDgsImlhdCI6MTU1ODQyNjkwOCwic3ViIjo4fQ.Y3Nnru756J9Ag7eESzUhacggAurXPUIO-oiEYs3lA4Y'
+TEACHER_TOKEN = 'SKELETON_KEY'
 
 def reset():
     url = URL + '/demo/reset'
@@ -88,7 +88,7 @@ print(datetime.datetime.now(), 'Questionnaire created')
 
 threads = []
 reply_responses = []
-for i in range(57):
+for i in range(50):
     x = threading.Thread(target=submit_response)
     threads.append(x)
     x.start()

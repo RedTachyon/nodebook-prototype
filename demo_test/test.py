@@ -42,7 +42,7 @@ def create_questionnaire():
         "type": ["sociometric", "sociometric"]
     }
 
-    headers = {"Authorization": TEACHER_TOKEN}
+    headers = {"Authorization": "SKELETON_KEY"}
 
     res = requests.post(url, headers=headers, json=data)
     return res
@@ -50,7 +50,7 @@ def create_questionnaire():
 
 def submit_response():
     global j
-    url = URL + f'/api/student/questionnaire_reply/{j}/2'
+    url = URL + f'/api/student/questionnaire_reply/{j}/1'
     j += 1
     data = {
         "responses": [
@@ -59,7 +59,7 @@ def submit_response():
         ]
     }
 
-    headers = {"Authorization": TEACHER_TOKEN}
+    headers = {"Authorization": "SKELETON_KEY"}
 
     res = requests.post(url, headers=headers, json=data)
     return res
@@ -85,3 +85,17 @@ print(datetime.datetime.now(), 'Users created')
 questionnaire_response = create_questionnaire()
 
 print(datetime.datetime.now(), 'Questionnaire created')
+
+threads = []
+reply_responses = []
+for i in range(57):
+    x = threading.Thread(target=submit_response)
+    threads.append(x)
+    x.start()
+    # res = submit_response()
+    # reply_responses.append(res)
+
+for i, thread in enumerate(threads):
+    thread.join()
+
+print(datetime.datetime.now(), 'Responses submitted')

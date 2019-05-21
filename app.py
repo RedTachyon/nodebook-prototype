@@ -476,7 +476,7 @@ def demo_register_login():
         models.run_simple_query("INSERT INTO classes_students (class_id, student_id) VALUES (1, ?)", (student_id,))
 
     token = auth.encode_auth_token(user_id)
-    response['token'] = token
+    response['auth_token'] = token
 
     return jsonify(response)
 

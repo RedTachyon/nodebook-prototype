@@ -20,46 +20,53 @@ def api_home():
     return "This is a barebones  API home screen.", 418
 
 
-@app.route('/api/reset', methods=['GET'])
-def reset_data():
-    models.initialize()
-    models.seed_data('seed.sql')
-
-    # Create an experiment for class_id=1
-    experiment_id = models.create_questionnaire(
-        ["Who do you want to work with this week?", "How happy were you today?", "Who is your best friend?"],
-        [0, 1, 1], [3, 3, 1], 1,
-        ["sociometric", "scalar", "sociometric"]
-    )
-    models.push_questionnaire(experiment_id, 1)
-
-    # Create a response
-    models.update_results(1, experiment_id, [[2], 2, [6]])
-    models.update_results(2, experiment_id, [[7], 3, [1]])
-    models.update_results(3, experiment_id, [[2], 1, [5]])
-    models.update_results(4, experiment_id, [[16], 1, [5]])
-    models.update_results(5, experiment_id, [[3], 1, [5]])
-    models.update_results(6, experiment_id, [[13], 1, [5]])
-    models.update_results(7, experiment_id, [[2], 1, [5]])
-    models.update_results(8, experiment_id, [[17], 1, [5]])
-    models.update_results(9, experiment_id, [[20], 1, [5]])
-    models.update_results(10, experiment_id, [[15], 1, [5]])
-    models.update_results(11, experiment_id, [[13], 1, [5]])
-    models.update_results(12, experiment_id, [[7], 1, [5]])
-    models.update_results(13, experiment_id, [[8], 1, [5]])
-    models.update_results(14, experiment_id, [[4], 1, [5]])
-    models.update_results(15, experiment_id, [[12], 1, [5]])
-    models.update_results(16, experiment_id, [[3], 1, [5]])
-    models.update_results(17, experiment_id, [[9], 1, [5]])
-    models.update_results(18, experiment_id, [[18], 1, [5]])
-    models.update_results(19, experiment_id, [[1], 1, [5]])
-    models.update_results(20, experiment_id, [[12], 1, [5]])
-
-    return "Database has been reset", 201
+# @app.route('/api/reset', methods=['GET'])
+# def reset_data():
+#     models.initialize()
+#     models.seed_data('seed.sql')
+#
+#     # Create an experiment for class_id=1
+#     experiment_id = models.create_questionnaire(
+#         ["Who do you want to work with this week?", "How happy were you today?", "Who is your best friend?"],
+#         [0, 1, 1], [3, 3, 1], 1,
+#         ["sociometric", "scalar", "sociometric"]
+#     )
+#     models.push_questionnaire(experiment_id, 1)
+#
+#     # Create a response
+#     models.update_results(1, experiment_id, [[2], 2, [6]])
+#     models.update_results(2, experiment_id, [[7], 3, [1]])
+#     models.update_results(3, experiment_id, [[2], 1, [5]])
+#     models.update_results(4, experiment_id, [[16], 1, [5]])
+#     models.update_results(5, experiment_id, [[3], 1, [5]])
+#     models.update_results(6, experiment_id, [[13], 1, [5]])
+#     models.update_results(7, experiment_id, [[2], 1, [5]])
+#     models.update_results(8, experiment_id, [[17], 1, [5]])
+#     models.update_results(9, experiment_id, [[20], 1, [5]])
+#     models.update_results(10, experiment_id, [[15], 1, [5]])
+#     models.update_results(11, experiment_id, [[13], 1, [5]])
+#     models.update_results(12, experiment_id, [[7], 1, [5]])
+#     models.update_results(13, experiment_id, [[8], 1, [5]])
+#     models.update_results(14, experiment_id, [[4], 1, [5]])
+#     models.update_results(15, experiment_id, [[12], 1, [5]])
+#     models.update_results(16, experiment_id, [[3], 1, [5]])
+#     models.update_results(17, experiment_id, [[9], 1, [5]])
+#     models.update_results(18, experiment_id, [[18], 1, [5]])
+#     models.update_results(19, experiment_id, [[1], 1, [5]])
+#     models.update_results(20, experiment_id, [[12], 1, [5]])
+#
+#     return "Database has been reset", 201
 
 
 @app.route('/demo/reset', methods=['GET'])
 def prepare_demo():
+
+    allowed_user = int(-1)
+
+    authorized, message = auth.authorize_teacher(allowed_user)
+    if not authorized:
+        return jsonify(message), 401
+
     models.initialize()
     models.seed_data('demoseed.sql')
 

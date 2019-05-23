@@ -11,10 +11,11 @@ j = 1
 # TEACHER_TOKEN = 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1NjYyMDI5MDgsImlhdCI6MTU1ODQyNjkwOCwic3ViIjo4fQ.Y3Nnru756J9Ag7eESzUhacggAurXPUIO-oiEYs3lA4Y'
 TEACHER_TOKEN = 'SKELETON_KEY'
 
+
 def reset():
     url = URL + '/demo/reset'
 
-    res = requests.get(url)
+    res = requests.get(url, headers={'Authorization': TEACHER_TOKEN})
     return res
 
 
@@ -36,10 +37,10 @@ def register_login(username='auto', name='auto', password='auto'):
 def create_questionnaire():
     url = URL + '/api/teacher/create_experiment/1'
     data = {
-        "questions": ["Who is your best friend in this class?", "Who would you like to work with on your next project?"],
-        "mins": [1, 0],
-        "maxs": [1, 3],
-        "type": ["sociometric", "sociometric"]
+        "questions": ["Who would you like to work with on your next project?"],
+        "mins": [1],
+        "maxs": [1],
+        "type": ["sociometric"]
     }
 
     headers = {"Authorization": "SKELETON_KEY"}
